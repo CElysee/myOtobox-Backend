@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated, List
 from fastapi import APIRouter, HTTPException, Depends
 from database import db_dependency
@@ -23,7 +24,11 @@ async def create_car_brand(car_brand: schemas.CarBrandBase, db: db_dependency):
     if check_brand:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Brand already exists")
 
-    car_brand = models.CarBrand(**car_brand.dict())
+    car_brand = models.CarBrand(
+        name=car_brand.name,
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
     db.add(car_brand)
     db.commit()
     db.refresh(car_brand)
@@ -37,18 +42,27 @@ async def get_car_brand(id: int, db: db_dependency):
 
 
 @router.put("/update/{id}")
-async def update_car_brand(id: int, car_brand: schemas.CarBrandBase, db: db_dependency):
-    check_brand = db.query(models.CarBrand).filter(models.CarBrand.id == car_brand.id).first()
+async def update_car_brand(id: int, car_brand: schemas.CarBrandUpdate, db: db_dependency):
+    check_brand = db.query(models.CarBrand).filter(models.CarBrand.id == id).first()
     if check_brand is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Brand does not exist")
 
-    car_brand = db.query(models.CarBrand).filter(models.CarBrand.id == id).update(car_brand.dict())
+    # Define the update values in a dictionary
+    update_values = {
+        "name": car_brand.name,
+        "updated_at": datetime.now(),
+    }
+    car_brand = db.query(models.CarBrand).filter(models.CarBrand.id == id).update(update_values)
     db.commit()
-    return {"message":"Car brand updated successfully", "data": car_brand}
+    return {"message": "Car brand updated successfully"}
 
 
 @router.delete("/delete/{id}")
 async def delete_car_brand(id: int, db: db_dependency):
+    check_brand = db.query(models.CarBrand).filter(models.CarBrand.id == id).first()
+    if check_brand is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Brand does not exist")
+
     car_brand = db.query(models.CarBrand).filter(models.CarBrand.id == id).delete()
     db.commit()
-    return {"message":"Car brand deleted successfully"}
+    return {"message": "Car brand deleted successfully"}

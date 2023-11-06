@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette import status
 from fastapi.staticfiles import StaticFiles
 
-from routes import (auth, country, CarBrand, CarModel, CarTrim)
+from routes import (auth, country, CarBrand, CarModel, CarTrim, CarStandardFeautures, CarFuelType)
 from routes.auth import get_current_user, user_dependency
 
 import models
@@ -29,6 +29,8 @@ app.include_router(country.router)
 app.include_router(CarBrand.router)
 app.include_router(CarModel.router)
 app.include_router(CarTrim.router)
+app.include_router(CarStandardFeautures.router)
+app.include_router(CarFuelType.router)
 
 app.mount("/UserProfiles", StaticFiles(directory="UserProfiles"), name="images")
 # Your cache instance, replace with your specific cache implementation

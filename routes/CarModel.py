@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Depends
 from database import db_dependency
@@ -24,7 +25,13 @@ async def create_car_model(car_model: schemas.CarModelBase, db: db_dependency):
     if check_model:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Model already exists")
 
-    car_model = models.CarModel(**car_model.dict())
+    car_model = models.CarModel(
+        brand_model_name=car_model.brand_model_name,
+        brand_id=car_model.brand_id,
+        production_years=car_model.production_years,
+        created_at=datetime.now(),
+        updated_at=datetime.now(),
+    )
     db.add(car_model)
     db.commit()
     db.refresh(car_model)
@@ -38,18 +45,27 @@ async def get_car_model(id: int, db: db_dependency):
 
 
 @router.put("/update/{id}")
-async def update_car_model(id: int, car_model: schemas.CarModelBase, db: db_dependency):
-    check_model = db.query(models.CarModel).filter(models.CarModel.id == car_model.id).first()
+async def update_car_model(id: int, car_model: schemas.CarModelUpdate, db: db_dependency):
+    check_model = db.query(models.CarModel).filter(models.CarModel.id == id).first()
     if check_model is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Model does not exist")
 
-    car_model = db.query(models.CarModel).filter(models.CarModel.id == id).update(car_model.dict())
+    update_values = {
+        "brand_model_name": car_model.brand_model_name,
+        "brand_id": car_model.brand_id,
+        "production_years": car_model.production_years,
+        "updated_at": datetime.now(),
+    }
+    car_model = db.query(models.CarModel).filter(models.CarModel.id == id).update(update_values)
     db.commit()
-    return {"message": "Car model updated successfully", "data": car_model}
+    return {"message": "Car model updated successfully"}
 
 
 @router.delete("/delete/{id}")
 async def delete_car_model(id: int, db: db_dependency):
+    check_model = db.query(models.CarModel).filter(models.CarModel.id == id).first()
+    if check_model is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Car Model does not exist")
     car_model = db.query(models.CarModel).filter(models.CarModel.id == id).delete()
     db.commit()
     return {"message": "Car model deleted successfully"}

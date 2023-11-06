@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Depends
 from database import db_dependency
@@ -38,12 +39,18 @@ async def get_car_trim(id: int, db: db_dependency):
 
 
 @router.put("/update/{id}")
-async def update_car_trim(id: int, car_trim: schemas.CarTrimBase, db: db_dependency):
-    check_trim = db.query(models.CarTrim).filter(models.CarTrim.id == car_trim.id).first()
+async def update_car_trim(id: int, car_trim: schemas.CarTrimUpdate, db: db_dependency):
+    check_trim = db.query(models.CarTrim).filter(models.CarTrim.id == id).first()
     if check_trim is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Trim does not exist")
-
-    car_trim = db.query(models.CarTrim).filter(models.CarTrim.id == id).update(car_trim.dict())
+    updated_values = {
+        "trim_name": car_trim.trim_name,
+        "model_id": car_trim.model_id,
+        "engine": car_trim.engine,
+        "curb_weight": car_trim.curb_weight,
+        "updated_at": datetime.now(),
+    }
+    car_trim = db.query(models.CarTrim).filter(models.CarTrim.id == id).update(updated_values)
     db.commit()
     return {"message": "Car trim updated successfully", "data": car_trim}
 

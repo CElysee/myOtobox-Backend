@@ -69,6 +69,12 @@ class CarBrandBase(BaseModel):
     updated_at: Optional[datetime] = None
 
 
+class CarBrandUpdate(BaseModel):
+    name: Optional[str]
+    country_name: Optional[str]
+    updated_at: Optional[datetime] = None
+
+
 class CarModelBase(BaseModel):
     brand_id: str
     brand_model_name: str
@@ -77,10 +83,47 @@ class CarModelBase(BaseModel):
     updated_at: Optional[datetime] = None
 
 
+class CarModelUpdate(BaseModel):
+    brand_id: Optional[str]
+    brand_model_name: Optional[str]
+    production_years: Optional[str]
+    updated_at: Optional[datetime] = None
+
+
 class CarTrimBase(BaseModel):
     model_id: str
     trim_name: str
-    engine:Optional[str]
-    curb_weight:Optional[str]
+    engine: Optional[str]
+    curb_weight: Optional[str]
     created_at: datetime
+    updated_at: Optional[datetime] = None
+
+
+class CarTrimUpdate(BaseModel):
+    model_id: Optional[str]
+    trim_name: Optional[str]
+    engine: Optional[str]
+    curb_weight: Optional[str]
+    updated_at: Optional[datetime] = None
+
+
+class CarStandardFeaturesBase(BaseModel):
+    feature_name: List[str]
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+
+class CarStandardFeaturesUpdate(BaseModel):
+    feature_name: Optional[str]
+    updated_at: Optional[datetime] = None
+
+
+class CarFuelTypeBase(BaseModel):
+    fuel_type: List[str]
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+
+class CarFuelTypeUpdate(BaseModel):
+    fuel_type: Optional[str]
     updated_at: Optional[datetime] = None

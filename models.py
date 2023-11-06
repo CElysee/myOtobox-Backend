@@ -76,3 +76,21 @@ class CarTrim(Base):
     updated_at = Column(DateTime)
 
     car_model = relationship("CarModel", back_populates="car_trim")
+
+
+class CarStandardFeatures(Base):
+    __tablename__ = "car_standard_features"
+
+    id = Column(Integer, primary_key=True, index=True)
+    feature_name = Column(String(50))
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+
+class CarFuelType(Base):
+    __tablename__ = "car_fuel_type"
+
+    id = Column(Integer, primary_key=True, index=True)
+    fuel_type = Column(String(50))
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
