@@ -91,7 +91,7 @@ class CarModelUpdate(BaseModel):
 
 
 class CarTrimBase(BaseModel):
-    model_id: str
+    car_model_id: str
     trim_name: str
     engine: Optional[str]
     curb_weight: Optional[str]
@@ -100,7 +100,7 @@ class CarTrimBase(BaseModel):
 
 
 class CarTrimUpdate(BaseModel):
-    model_id: Optional[str]
+    car_model_id: Optional[str]
     trim_name: Optional[str]
     engine: Optional[str]
     curb_weight: Optional[str]
@@ -126,4 +126,39 @@ class CarFuelTypeBase(BaseModel):
 
 class CarFuelTypeUpdate(BaseModel):
     fuel_type: Optional[str]
+    updated_at: Optional[datetime] = None
+
+
+class CarForSaleBase(BaseModel):
+    user_id: int
+    car_brand_id: int
+    car_model_id: int
+    car_trim_id: Optional[int]
+    car_year: str
+    car_mileage: str
+    car_price: str
+    car_currency: str
+    car_location: str
+    # car_images: List[str]
+    car_standard_features: List[str]
+    car_fuel_type_id: int
+    car_exterior_color: str
+    car_interior_color: str
+    car_transmission: str
+    car_engine_capacity: str
+    car_drive_train: str
+    car_fuel_consumption: str
+    car_vin_number: str
+    car_registration_number: str
+    car_insurance: str
+    car_control_technique: str
+    car_user_type: str
+    car_accident_history: str
+    seller_note: str
+
+
+class CarSellImagesBase(BaseModel):
+    car_for_sale_id: int
+    car_image: str
+    created_at: datetime
     updated_at: Optional[datetime] = None

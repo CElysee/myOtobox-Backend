@@ -45,7 +45,7 @@ async def update_car_trim(id: int, car_trim: schemas.CarTrimUpdate, db: db_depen
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Trim does not exist")
     updated_values = {
         "trim_name": car_trim.trim_name,
-        "model_id": car_trim.model_id,
+        "car_model_id": car_trim.car_model_id,
         "engine": car_trim.engine,
         "curb_weight": car_trim.curb_weight,
         "updated_at": datetime.now(),

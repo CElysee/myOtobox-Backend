@@ -132,7 +132,7 @@ class UserToken(BaseModel):
     userId: int
 
 
-UPLOAD_FOLDER = "UserProfiles"
+UPLOAD_FOLDER = "CarSellImages"
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 

@@ -24,6 +24,7 @@ class User(Base):
     deleted = Column(Boolean)
 
     country = relationship("Country", back_populates="user")
+    car_for_sale = relationship("CarForSale", back_populates="user")
 
 
 class Country(Base):
@@ -48,6 +49,7 @@ class CarBrand(Base):
     updated_at = Column(DateTime)
 
     car_model = relationship("CarModel", back_populates="car_brand")
+    car_for_sale = relationship("CarForSale", back_populates="car_brand")
 
 
 class CarModel(Base):
@@ -62,13 +64,14 @@ class CarModel(Base):
 
     car_brand = relationship("CarBrand", back_populates="car_model")
     car_trim = relationship("CarTrim", back_populates="car_model")
+    car_for_sale = relationship("CarForSale", back_populates="car_model")
 
 
 class CarTrim(Base):
     __tablename__ = "car_trims"
 
     id = Column(Integer, primary_key=True, index=True)
-    model_id = Column(Integer, ForeignKey("car_models.id"))
+    car_model_id = Column(Integer, ForeignKey("car_models.id"))
     trim_name = Column(String(50))
     engine = Column(String(50), nullable=True)
     curb_weight = Column(String(50), nullable=True)
@@ -76,6 +79,7 @@ class CarTrim(Base):
     updated_at = Column(DateTime)
 
     car_model = relationship("CarModel", back_populates="car_trim")
+    car_for_sale = relationship("CarForSale", back_populates="car_trim")
 
 
 class CarStandardFeatures(Base):
@@ -86,6 +90,8 @@ class CarStandardFeatures(Base):
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
 
+    car_sell_standard_features = relationship("CarSellStandardFeatures", back_populates="car_standard_features")
+
 
 class CarFuelType(Base):
     __tablename__ = "car_fuel_type"
@@ -94,3 +100,71 @@ class CarFuelType(Base):
     fuel_type = Column(String(50))
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
+
+    car_for_sale = relationship("CarForSale", back_populates="car_fuel_type")
+
+
+class CarForSale(Base):
+    __tablename__ = "car_for_sale"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    car_brand_id = Column(Integer, ForeignKey("car_brands.id"))
+    car_model_id = Column(Integer, ForeignKey("car_models.id"))
+    car_trim_id = Column(Integer, ForeignKey("car_trims.id"))
+    car_year = Column(String(50))
+    car_mileage = Column(String(50))
+    car_price = Column(String(50))
+    car_currency = Column(String(50))
+    car_location = Column(String(50))
+    car_exterior_color = Column(String(50))
+    car_interior_color = Column(String(50))
+    car_fuel_type_id = Column(Integer, ForeignKey("car_fuel_type.id"))
+    car_transmission = Column(String(50))
+    car_engine_capacity = Column(String(50))
+    car_fuel_consumption = Column(String(50))
+    car_drive_train = Column(String(50))
+    car_vin_number = Column(String(50))
+    car_registration_number = Column(String(50))
+    car_insurance = Column(String(50))
+    car_control_technique = Column(String(50))
+    car_user_type = Column(String(50))
+    car_accident_history = Column(String(50))
+    car_status = Column(String(50))
+    featured = Column(Boolean)
+    seller_note = Column(Text)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+    user = relationship("User", back_populates="car_for_sale")
+    car_brand = relationship("CarBrand", back_populates="car_for_sale")
+    car_model = relationship("CarModel", back_populates="car_for_sale")
+    car_trim = relationship("CarTrim", back_populates="car_for_sale")
+    car_fuel_type = relationship("CarFuelType", back_populates="car_for_sale")
+    car_sell_standard_features = relationship("CarSellStandardFeatures", back_populates="car_for_sale")
+    car_sell_images = relationship("CarSellImages", back_populates="car_for_sale")
+
+
+class CarSellStandardFeatures(Base):
+    __tablename__ = "car_sell_standard_features"
+
+    id = Column(Integer, primary_key=True, index=True)
+    car_for_sale_id = Column(Integer, ForeignKey("car_for_sale.id"))
+    car_standard_features_id = Column(Integer, ForeignKey("car_standard_features.id"))
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+    car_for_sale = relationship("CarForSale", back_populates="car_sell_standard_features")
+    car_standard_features = relationship("CarStandardFeatures", back_populates="car_sell_standard_features")
+
+
+class CarSellImages(Base):
+    __tablename__ = "car_sell_images"
+
+    id = Column(Integer, primary_key=True, index=True)
+    car_for_sale_id = Column(Integer, ForeignKey("car_for_sale.id"))
+    image_name = Column(String(50))
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+    car_for_sale = relationship("CarForSale", back_populates="car_sell_images")
