@@ -1,23 +1,20 @@
 from datetime import datetime, time
 from typing import Optional, List
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, FilePath
 
 
 class User(BaseModel):
-    name: str
+    firstName: str
+    lastName: str
+    gender: str
     email: EmailStr
-    username: Optional[str]
     password: str
     role: str
     phone_number: Optional[str]
-
-    # last_login: Optional[datetime] = None
-    # deleted: Optional[bool] = False
-
+    country_id: Optional[int]
     class Config:
         from_attributes = True
-
 
 class UserCreate(User):
     pass
@@ -35,7 +32,16 @@ class UserOut(BaseModel):
     # country_id: int
     # user_profile_id: int
 
-
+class UserUpdate(BaseModel):
+    firstName: Optional[str]
+    lastName: Optional[str]
+    email: Optional[EmailStr]
+    phone_number: Optional[str]
+    gender: Optional[str]
+    role: Optional[str]
+    is_active: Optional[bool]
+    country_id: Optional[int]
+    
 class UserCheck(BaseModel):
     email: EmailStr
 
@@ -61,17 +67,20 @@ class CountryOut(CountryBase):
     class Config:
         from_attributes = True
 
-
+    
 class CarBrandBase(BaseModel):
     name: str
     country_name: str
-    created_at: datetime
-    updated_at: Optional[datetime] = None
+    brand_logo: FilePath  # Path to the uploaded image on the server
+    created_at: Optional[datetime] = None 
 
+    class Config:
+        orm_mode = True
 
 class CarBrandUpdate(BaseModel):
     name: Optional[str]
     country_name: Optional[str]
+    brand_logo: Optional[str]
     updated_at: Optional[datetime] = None
 
 
@@ -91,27 +100,31 @@ class CarModelUpdate(BaseModel):
 
 
 class CarTrimBase(BaseModel):
+    car_brand_id: str
     car_model_id: str
     trim_name: str
-    engine: Optional[str]
-    curb_weight: Optional[str]
-    created_at: datetime
-    updated_at: Optional[datetime] = None
+    engine: Optional[str] = None
+    trim_hp: Optional[str] = None
+    curb_weight: Optional[str] = None
+    created_at: Optional[datetime] = None
 
 
 class CarTrimUpdate(BaseModel):
-    car_model_id: Optional[str]
-    trim_name: Optional[str]
-    engine: Optional[str]
-    curb_weight: Optional[str]
+    car_brand_id: Optional[int] = None
+    car_model_id: Optional[int] = None
+    trim_name: Optional[str] = None
+    engine: Optional[str] = None
+    curb_weight: Optional[str] = None
+    trim_hp: Optional[str] = None
     updated_at: Optional[datetime] = None
 
+
+class Feature(BaseModel):
+    feature_name: str
 
 class CarStandardFeaturesBase(BaseModel):
-    feature_name: List[str]
-    created_at: datetime
-    updated_at: Optional[datetime] = None
-
+    features: List[Feature]
+    created_at: Optional[datetime] = None
 
 class CarStandardFeaturesUpdate(BaseModel):
     feature_name: Optional[str]
@@ -155,6 +168,13 @@ class CarForSaleBase(BaseModel):
     car_user_type: str
     car_accident_history: str
     seller_note: str
+    seller_type: str
+    seller_phone_number: str
+    seller_email: str
+    seller_address: str
+
+    class Config:
+        from_attributes = True
 
 
 class CarSellImagesBase(BaseModel):
@@ -162,3 +182,15 @@ class CarSellImagesBase(BaseModel):
     car_image: str
     created_at: datetime
     updated_at: Optional[datetime] = None
+
+
+class OTPVerificationCreate(BaseModel):
+    phone_number: str
+    otp_code: str
+    verified: bool
+    created_at: Optional[datetime] = None
+
+
+class OTPVerificationUpdate(BaseModel):
+    phone_number: str
+    otp_code: int

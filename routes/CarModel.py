@@ -1,36 +1,67 @@
 from datetime import datetime
 from typing import Optional, List
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, Form, File
 from database import db_dependency
 from starlette import status
 import models
 import schemas
+from UploadFile import FileHandler
+from database import db_dependency, get_db
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     tags=["CarModels"],
     prefix='/car_model'
 )
 
+UPLOAD_FOLDER = "BrandModel"
 
 @router.get("/list")
 async def get_car_models(db: db_dependency):
-    car_model_list = db.query(models.CarModel).all()
-    return car_model_list
+    car_model_list = db.query(models.CarModel).order_by(models.CarModel.id.desc()).all()
+    car_brand_count = db.query(models.CarBrand).count()
+    car_model_count = db.query(models.CarModel).count()
+    car_trim_count = db.query(models.CarTrim).count()
+    car_model = []
+    for model in car_model_list:
+        car_model.append({
+            "id": model.id,
+            "brand_model_name": model.brand_model_name,
+            "brand_id": model.brand_id,
+            "brand_name": db.query(models.CarBrand).filter(models.CarBrand.id == model.brand_id).first().name,
+            "production_years": model.production_years,
+            "brand_model_image": f"/BrandModel/{model.brand_model_image}",
+            "created_at": model.created_at,
+        })
+    counts = {"car_brand": car_brand_count, "car_model": car_model_count, "car_trim": car_trim_count}
+    return {"car_model": car_model, "counts": counts}
 
 
 @router.post("/create", status_code=status.HTTP_201_CREATED)
-async def create_car_model(car_model: schemas.CarModelBase, db: db_dependency):
+async def create_car_model(
+    brand_model_name: str = Form(...),
+    brand_id: str = Form(...),
+    production_years: str = Form(...),
+    brand_model_image: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
     check_model = db.query(models.CarModel).filter(
-        models.CarModel.brand_model_name == car_model.brand_model_name).first()
+        models.CarModel.brand_model_name == brand_model_name).first()
     if check_model:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Model already exists")
 
+ # Upload logo to the server
+    file_handler = FileHandler(upload_folder=UPLOAD_FOLDER)
+
+    # Use the file_handler to save an uploaded file
+    saved_filename = file_handler.save_uploaded_file(brand_model_image)
+    
     car_model = models.CarModel(
-        brand_model_name=car_model.brand_model_name,
-        brand_id=car_model.brand_id,
-        production_years=car_model.production_years,
+        brand_model_name=brand_model_name,
+        brand_id=brand_id,
+        production_years=production_years,
+        brand_model_image = saved_filename,
         created_at=datetime.now(),
-        updated_at=datetime.now(),
     )
     db.add(car_model)
     db.commit()
@@ -44,20 +75,31 @@ async def get_car_model(id: int, db: db_dependency):
     return car_model
 
 
-@router.put("/update/{id}")
-async def update_car_model(id: int, car_model: schemas.CarModelUpdate, db: db_dependency):
+@router.put("/update/")
+async def update_car_model(
+    id: str = Form(...),
+    brand_model_name: str = Form(...),
+    brand_id: str = Form(...),
+    production_years: str = Form(...),
+    brand_model_image: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
     check_model = db.query(models.CarModel).filter(models.CarModel.id == id).first()
     if check_model is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Model does not exist")
-
-    update_values = {
-        "brand_model_name": car_model.brand_model_name,
-        "brand_id": car_model.brand_id,
-        "production_years": car_model.production_years,
-        "updated_at": datetime.now(),
-    }
-    car_model = db.query(models.CarModel).filter(models.CarModel.id == id).update(update_values)
-    db.commit()
+    
+    if brand_id:
+        check_model.brand_id = brand_id
+    if brand_model_name:
+        check_model.brand_model_name = brand_model_name
+    if production_years:
+        check_model.production_years = production_years
+    if brand_model_image:
+        file_handler = FileHandler(upload_folder=UPLOAD_FOLDER)
+        saved_filename = file_handler.save_uploaded_file(brand_model_image)
+        check_model.brand_model_image = saved_filename
+    db.commit()         
+           
     return {"message": "Car model updated successfully"}
 
 
