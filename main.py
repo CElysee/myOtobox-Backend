@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette import status
 from fastapi.staticfiles import StaticFiles
 
-from routes import (auth, country, CarBrand, CarModel, CarTrim, CarStandardFeautures, CarFuelType, CarForSale)
+from routes import (auth, country, CarBrand, CarModel, CarTrim, CarStandardFeautures, CarFuelType, CarForSale, CarBodyType)
 from routes.auth import get_current_user, user_dependency
 
 import models
@@ -20,7 +20,7 @@ models.Base.metadata.create_all(bind=engine)
 app.add_middleware(
     CORSMiddleware,
     # allow_origins=origins,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173","http://localhost:5174"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -35,10 +35,12 @@ app.include_router(CarTrim.router)
 app.include_router(CarStandardFeautures.router)
 app.include_router(CarFuelType.router)
 app.include_router(CarForSale.router)
+app.include_router(CarBodyType.router)
 
 app.mount("/CarSellImages", StaticFiles(directory="CarSellImages"), name="images")
 app.mount("/BrandLogo", StaticFiles(directory="BrandLogo"), name="images")
 app.mount("/BrandModel", StaticFiles(directory="BrandModel"), name="images")
+app.mount("/BodyTypeImage", StaticFiles(directory="BodyTypeImage"), name="images")
 # Your cache instance, replace with your specific cache implementation
 cache = TTLCache(maxsize=100, ttl=600)  # TTLCache as an example, use your actual cache implementation
 
@@ -78,6 +80,17 @@ async def get_image(filename: str):
         raise HTTPException(status_code=404, detail="Image not found")
 
     with open(f"BrandModel/{filename}", "rb") as f:
+        image_data = f.read()
+
+    return image_data
+
+@app.get("/BodyTypeImage/{filename}")
+async def get_image(filename: str):
+    """Get an image by filename."""
+    if not os.path.exists(f"BodyTypeImage/{filename}"):
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    with open(f"BodyTypeImage/{filename}", "rb") as f:
         image_data = f.read()
 
     return image_data

@@ -194,3 +194,12 @@ class OTPVerificationCreate(BaseModel):
 class OTPVerificationUpdate(BaseModel):
     phone_number: str
     otp_code: int
+
+class CarBodyTypeCreate(BaseModel):
+    body_type_name: str
+    body_type_image: str    
+    
+class CarBodyTypeUpdate(BaseModel):
+    body_type_name: Optional[str] = None
+    body_type_image: Optional[str] = None
+    updated_at: Optional[datetime] = None    

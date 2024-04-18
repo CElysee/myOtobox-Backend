@@ -139,6 +139,7 @@ class CarForSale(Base):
     seller_phone_number = Column(String(50))
     seller_email = Column(String(50))
     car_status = Column(String(50))
+    car_condition = Column(String(50))
     featured = Column(Boolean)
     seller_note = Column(Text)
     cover_image = Column(String(50))
@@ -189,3 +190,13 @@ class OTPVerification(Base):
     verified = Column(Boolean)
     verified_at = Column(DateTime)
     deleted = Column(Boolean)
+
+class CarBodyType(Base):
+    __tablename__ = "car_body_type"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    body_type_name = Column(String(50))
+    body_type_image = Column(Text)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+    
