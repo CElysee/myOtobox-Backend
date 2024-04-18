@@ -172,6 +172,8 @@ class CarForSaleBase(BaseModel):
     seller_phone_number: str
     seller_email: str
     seller_address: str
+    car_condition: str
+    car_seller_name: str
 
     class Config:
         from_attributes = True

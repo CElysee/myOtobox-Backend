@@ -39,6 +39,7 @@ def save_uploaded_file(file: UploadFile):
 @router.get("/list")
 async def get_car_for_sale(db: Session = Depends(get_db)):
     car_for_sale_list = db.query(models.CarForSale).order_by(models.CarForSale.id.desc()).all()
+    count_cars_for_sale = db.query(models.CarForSale).filter(models.CarForSale.car_status == "Available").count()
     cars_for_sale = []
 
     for car in car_for_sale_list:
@@ -81,7 +82,7 @@ async def get_car_for_sale(db: Session = Depends(get_db)):
 
         cars_for_sale.append(car)
 
-    return cars_for_sale
+    return {"cars_for_sale": cars_for_sale, "count_cars_for_sale": count_cars_for_sale}
 
 
 @router.get("/car_brands/")
@@ -186,6 +187,7 @@ async def create_car_for_sale(
     car_control_technique: str = Form(...),
     seller_note: str = Form(...),
     car_condition: str = Form(...),
+    car_seller_name: str = Form(...),
     seller_phone_number: str = Form(...),
     seller_email: str = Form(...),
     car_images: List[UploadFile] = File(...),  # Corrected type declaration
@@ -226,6 +228,7 @@ async def create_car_for_sale(
         seller_email=seller_email,
         cover_image=cover_image_path,
         car_condition=car_condition,
+        car_seller_name=car_seller_name,
         created_at=datetime.now(),
     )
     db.add(add_car_for_sale)
@@ -281,6 +284,7 @@ async def update_car_for_sale(
     seller_note: str = Form(None),
     seller_phone_number: str = Form(None),
     seller_email: str = Form(None),
+    car_seller_name: str = Form(None),
     car_images: Optional[List[UploadFile]] = File(None),  # Corrected type declaration
     cover_image: Optional[UploadFile ]= File(None),
     car_standard_features: List[str] = Form(None),  # Assuming these are integer IDs
@@ -340,6 +344,8 @@ async def update_car_for_sale(
         check_car_exist.car_control_technique = car_control_technique
     if seller_note:
         check_car_exist.seller_note = seller_note
+    if car_seller_name:
+        check_car_exist.car_seller_name = car_seller_name    
     if seller_phone_number:
         check_car_exist.seller_phone_number = seller_phone_number
     if seller_email:

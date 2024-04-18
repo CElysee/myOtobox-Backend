@@ -140,6 +140,7 @@ class CarForSale(Base):
     seller_email = Column(String(50))
     car_status = Column(String(50))
     car_condition = Column(String(50))
+    car_seller_name = Column(String(50))
     featured = Column(Boolean)
     seller_note = Column(Text)
     cover_image = Column(String(50))
