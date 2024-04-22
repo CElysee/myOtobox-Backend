@@ -2,7 +2,7 @@ import os
 import uuid
 from datetime import datetime
 from typing import Optional, List
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, Form, File
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, Form, File, Query
 from sqlalchemy.orm import Session, load_only, contains_eager
 
 from database import db_dependency, SessionLocal
@@ -37,9 +37,109 @@ def save_uploaded_file(file: UploadFile):
 
 
 @router.get("/list")
-async def get_car_for_sale(db: Session = Depends(get_db)):
-    car_for_sale_list = db.query(models.CarForSale).order_by(models.CarForSale.id.desc()).all()
-    count_cars_for_sale = db.query(models.CarForSale).filter(models.CarForSale.car_status == "Available").count()
+async def get_car_for_sale(
+    make: str = None,
+    model_id: str = None,
+    min_input_price: float = Query(None),
+    max_input_price: float = Query(None),
+    db: Session = Depends(get_db),
+):
+
+    query = db.query(models.CarForSale)
+
+    if make:
+        make_id = db.query(models.CarBrand).filter(models.CarBrand.name == make).first()
+        if make_id:
+            query = query.filter(models.CarForSale.car_brand_id == make_id.id)
+
+    if model_id:
+        query = query.filter(models.CarForSale.car_model_id == model_id)
+
+    if min_input_price is not None and max_input_price is not None:
+        query = query.filter(
+            models.CarForSale.car_price.between(min_input_price, max_input_price)
+        )
+
+    car_for_sale_list = query.all()
+    count_cars_for_sale = query.filter(
+        models.CarForSale.car_status == "Available"
+    ).count()
+
+    cars_for_sale = []
+
+    for car in car_for_sale_list:
+        car.brand = (
+            db.query(models.CarBrand)
+            .filter(models.CarBrand.id == car.car_brand_id)
+            .options(load_only(models.CarBrand.name))
+            .first()
+        )
+        car.model = (
+            db.query(models.CarModel)
+            .filter(models.CarModel.id == car.car_model_id)
+            .options(load_only(models.CarModel.brand_model_name))
+            .first()
+        )
+        car.car_images = (
+            db.query(models.CarSellImages)
+            .filter(models.CarSellImages.car_for_sale_id == car.id)
+            .options(load_only(models.CarSellImages.image_name))
+            .all()
+        )
+        # Fetch and attach the features to the car object
+        features_list = (
+            db.query(models.CarStandardFeatures)
+            .join(
+                models.CarSellStandardFeatures,
+                models.CarStandardFeatures.id
+                == models.CarSellStandardFeatures.car_standard_features_id,
+            )
+            .filter(models.CarSellStandardFeatures.car_for_sale_id == car.id)
+            .options(load_only(models.CarStandardFeatures.feature_name))
+            .all()
+        )
+        # car.features = [features.feature_name in features_list for features in features_list]
+        car.features = [feature for feature in features_list]
+        car.features_ids = [feature.id for feature in features_list]
+        # Add car_cover_image field to each car object
+        car_cover_image = "/CarSellImages/" + car.cover_image
+        car.cover_image = car_cover_image
+
+        cars_for_sale.append(car)
+
+    return {"cars_for_sale": cars_for_sale, "count_cars_for_sale": count_cars_for_sale}
+
+
+@router.get("/makeModels")
+async def get_car_make_models(
+    make: str = None,
+    model_id: str = None,
+    min_input_price: float = Query(None),
+    max_input_price: float = Query(None),
+    db: Session = Depends(get_db),
+):
+
+    query = db.query(models.CarForSale)
+
+    if make:
+        make_id = db.query(models.CarBrand).filter(models.CarBrand.name == make).first()
+        if make_id:
+            query = query.filter(models.CarForSale.car_brand_id == make_id.id)
+
+    if model_id:
+        model = db.query(models.CarModel).filter(models.CarModel.brand_model_name == model_id).first()
+        query = query.filter(models.CarForSale.car_model_id == model.id)
+
+    if min_input_price is not None and max_input_price is not None:
+        query = query.filter(
+            models.CarForSale.car_price.between(min_input_price, max_input_price)
+        )
+
+    car_for_sale_list = query.all()
+    count_cars_for_sale = query.filter(
+        models.CarForSale.car_status == "Available"
+    ).count()
+
     cars_for_sale = []
 
     for car in car_for_sale_list:
@@ -93,8 +193,16 @@ async def get_car_brands(db: db_dependency):
     car_trim_count = db.query(models.CarTrim).count()
     car_standard_features_count = db.query(models.CarStandardFeatures).count()
     car_standard_features = db.query(models.CarStandardFeatures).all()
-    car_for_sell = db.query(models.CarForSale).filter(models.CarForSale.car_status == "Available").count()
-    car_sold = db.query(models.CarForSale).filter(models.CarForSale.car_status == "Sold").count()
+    car_for_sell = (
+        db.query(models.CarForSale)
+        .filter(models.CarForSale.car_status == "Available")
+        .count()
+    )
+    car_sold = (
+        db.query(models.CarForSale)
+        .filter(models.CarForSale.car_status == "Sold")
+        .count()
+    )
 
     car_brand = []
 
@@ -286,25 +394,25 @@ async def update_car_for_sale(
     seller_email: str = Form(None),
     car_seller_name: str = Form(None),
     car_images: Optional[List[UploadFile]] = File(None),  # Corrected type declaration
-    cover_image: Optional[UploadFile ]= File(None),
+    cover_image: Optional[UploadFile] = File(None),
     car_standard_features: List[str] = Form(None),  # Assuming these are integer IDs
     db: Session = Depends(get_db),
 ):
-    check_car_exist = db.query(models.CarForSale).filter(
-        models.CarForSale.id == car_id
-    ).first()
-    
+    check_car_exist = (
+        db.query(models.CarForSale).filter(models.CarForSale.id == car_id).first()
+    )
+
     if not check_car_exist:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Car for sale not found"
-        )    
+        )
     if car_name_info:
         check_car_exist.car_name_info = car_name_info
     if car_brand_id:
         check_car_exist.car_brand_id = car_brand_id
     if car_model_id:
         check_car_exist.car_model_id = car_model_id
-    if car_trim_id: 
+    if car_trim_id:
         check_car_exist.car_trim_id = car_trim_id
     if car_year:
         check_car_exist.car_year = car_year
@@ -317,7 +425,7 @@ async def update_car_for_sale(
     if car_location:
         check_car_exist.car_location = car_location
     if car_condition:
-        check_car_exist.car_condition = car_condition    
+        check_car_exist.car_condition = car_condition
     if car_fuel_type:
         check_car_exist.car_fuel_type = car_fuel_type
     if car_exterior_color:
@@ -345,7 +453,7 @@ async def update_car_for_sale(
     if seller_note:
         check_car_exist.seller_note = seller_note
     if car_seller_name:
-        check_car_exist.car_seller_name = car_seller_name    
+        check_car_exist.car_seller_name = car_seller_name
     if seller_phone_number:
         check_car_exist.seller_phone_number = seller_phone_number
     if seller_email:
@@ -355,14 +463,19 @@ async def update_car_for_sale(
         check_car_exist.cover_image = cover_image_path
     check_car_exist.updated_at = datetime.now()
     db.commit()
-    
+
     for standard_feature in car_standard_features:
-        
-        check_if_feature_exist = db.query(models.CarSellStandardFeatures).filter(
-            models.CarSellStandardFeatures.car_for_sale_id == car_id,
-            models.CarSellStandardFeatures.car_standard_features_id == standard_feature,
-        ).first()
-        
+
+        check_if_feature_exist = (
+            db.query(models.CarSellStandardFeatures)
+            .filter(
+                models.CarSellStandardFeatures.car_for_sale_id == car_id,
+                models.CarSellStandardFeatures.car_standard_features_id
+                == standard_feature,
+            )
+            .first()
+        )
+
         if check_if_feature_exist is None:
             car_sell_standard_features = models.CarSellStandardFeatures(
                 car_for_sale_id=car_id,
@@ -371,19 +484,32 @@ async def update_car_for_sale(
             )
             db.add(car_sell_standard_features)
             db.commit()
-    
-    return {"message": "Car for sale updated successfully"} 
+
+    return {"message": "Car for sale updated successfully"}
+
 
 @router.delete("/delete/{id}")
 async def delete_car_for_sale(id: int, db: db_dependency):
-    check_car_exist = db.query(models.CarForSale).filter(models.CarForSale.id == id).first()
+    check_car_exist = (
+        db.query(models.CarForSale).filter(models.CarForSale.id == id).first()
+    )
     if check_car_exist is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Car for sale not found"
         )
-        
-    delete_images = db.query(models.CarSellImages).filter(models.CarSellImages.car_for_sale_id == id).delete()
-    delete_standard_features = db.query(models.CarSellStandardFeatures).filter(models.CarSellStandardFeatures.car_for_sale_id == id).delete()
-    car_for_sale = db.query(models.CarForSale).filter(models.CarForSale.id == id).delete()
+
+    delete_images = (
+        db.query(models.CarSellImages)
+        .filter(models.CarSellImages.car_for_sale_id == id)
+        .delete()
+    )
+    delete_standard_features = (
+        db.query(models.CarSellStandardFeatures)
+        .filter(models.CarSellStandardFeatures.car_for_sale_id == id)
+        .delete()
+    )
+    car_for_sale = (
+        db.query(models.CarForSale).filter(models.CarForSale.id == id).delete()
+    )
     db.commit()
-    return {"message": "Car for sale deleted successfully"}                                                                                                
+    return {"message": "Car for sale deleted successfully"}
