@@ -116,6 +116,12 @@ async def get_car_make_models(
     model_id: str = None,
     min_input_price: float = Query(None),
     max_input_price: float = Query(None),
+    start_year: int = Query(None),
+    end_year: int = Query(None),
+    start_kilometers: int = Query(None),
+    end_kilometers: int = Query(None),
+    car_transmission: str = Query(None),
+    fuel_type: str = Query(None),
     db: Session = Depends(get_db),
 ):
 
@@ -127,7 +133,11 @@ async def get_car_make_models(
             query = query.filter(models.CarForSale.car_brand_id == make_id.id)
 
     if model_id:
-        model = db.query(models.CarModel).filter(models.CarModel.brand_model_name == model_id).first()
+        model = (
+            db.query(models.CarModel)
+            .filter(models.CarModel.brand_model_name == model_id)
+            .first()
+        )
         query = query.filter(models.CarForSale.car_model_id == model.id)
 
     if min_input_price is not None and max_input_price is not None:
@@ -135,7 +145,24 @@ async def get_car_make_models(
             models.CarForSale.car_price.between(min_input_price, max_input_price)
         )
 
+    if start_year is not None and end_year is not None:
+        startYear = int(start_year)  # Convert to integer if not already
+        endYear = int(end_year)  # Convert to integer if not already
+        query = query.filter(models.CarForSale.car_year.between(startYear, endYear))
+
+    if start_kilometers is not None and end_kilometers is not None:
+        startKilometers = int(start_kilometers)
+        endKilometers = int(end_kilometers)
+        query = query.filter(
+            models.CarForSale.car_mileage.between(startKilometers, endKilometers)
+        )
+    if car_transmission:
+        query = query.filter(models.CarForSale.car_transmission == car_transmission)
+    if fuel_type:
+        query = query.filter(models.CarForSale.car_fuel_type == fuel_type)
+
     car_for_sale_list = query.all()
+
     count_cars_for_sale = query.filter(
         models.CarForSale.car_status == "Available"
     ).count()
