@@ -10,6 +10,8 @@ from starlette import status
 import models
 import schemas
 from sqlalchemy import asc
+import hashlib
+import random
 
 router = APIRouter(tags=["CarForSale"], prefix="/car_for_sale")
 
@@ -35,6 +37,9 @@ def save_uploaded_file(file: UploadFile):
         f.write(file.file.read())
     return random_filename
 
+def generate_short_stock_number():
+    short_stock_number = str(uuid.uuid4())[:8]  # Generate an eight-character UUID
+    return short_stock_number
 
 @router.get("/list")
 async def get_car_for_sale(
@@ -45,7 +50,7 @@ async def get_car_for_sale(
     db: Session = Depends(get_db),
 ):
 
-    query = db.query(models.CarForSale)
+    query = db.query(models.CarForSale).order_by(models.CarForSale.id.desc())
 
     if make:
         make_id = db.query(models.CarBrand).filter(models.CarBrand.name == make).first()
@@ -125,7 +130,7 @@ async def get_car_make_models(
     db: Session = Depends(get_db),
 ):
 
-    query = db.query(models.CarForSale)
+    query = db.query(models.CarForSale).order_by(models.CarForSale.id.desc())
 
     if make:
         make_id = db.query(models.CarBrand).filter(models.CarBrand.name == make).first()
@@ -335,7 +340,17 @@ async def create_car_for_sale(
         int(item) for item in car_standard_features[0].split(",")
     ]
     cover_image_path = save_uploaded_file(cover_image)
+    short_stock_number = generate_short_stock_number()
+    # Last added car for sale
+    last_car = db.query(models.CarForSale).order_by(models.CarForSale.id.desc()).first()
+    # Combine the last car ID with the short stock number
+    if last_car is None:
+        new_stock_number = f"{short_stock_number}1"
+    else:    
+        new_stock_number = f"{short_stock_number}{last_car.id}"
+    
     add_car_for_sale = models.CarForSale(
+        stock_number=new_stock_number,  # This should be generated dynamically
         user_id=user_id,
         car_name_info=car_name_info,
         car_brand_id=car_brand_id,

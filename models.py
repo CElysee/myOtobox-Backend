@@ -98,7 +98,9 @@ class CarStandardFeatures(Base):
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
 
-    car_sell_standard_features = relationship("CarSellStandardFeatures", back_populates="car_standard_features")
+    car_sell_standard_features = relationship(
+        "CarSellStandardFeatures", back_populates="car_standard_features"
+    )
 
 
 class CarFuelType(Base):
@@ -110,12 +112,12 @@ class CarFuelType(Base):
     updated_at = Column(DateTime)
 
 
-
 class CarForSale(Base):
     __tablename__ = "car_for_sale"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
+    stock_number = Column(Text)
     car_name_info = Column(String(50))
     car_year = Column(String(50))
     car_brand_id = Column(Integer, ForeignKey("car_brands.id"))
@@ -146,12 +148,14 @@ class CarForSale(Base):
     cover_image = Column(String(50))
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
-    
+
     user = relationship("User", back_populates="car_for_sale")
     car_brand = relationship("CarBrand", back_populates="car_for_sale")
     car_model = relationship("CarModel", back_populates="car_for_sale")
     car_trim = relationship("CarTrim", back_populates="car_for_sale")
-    car_sell_standard_features = relationship("CarSellStandardFeatures", back_populates="car_for_sale")
+    car_sell_standard_features = relationship(
+        "CarSellStandardFeatures", back_populates="car_for_sale"
+    )
     car_sell_images = relationship("CarSellImages", back_populates="car_for_sale")
 
 
@@ -164,8 +168,12 @@ class CarSellStandardFeatures(Base):
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
 
-    car_for_sale = relationship("CarForSale", back_populates="car_sell_standard_features")
-    car_standard_features = relationship("CarStandardFeatures", back_populates="car_sell_standard_features")
+    car_for_sale = relationship(
+        "CarForSale", back_populates="car_sell_standard_features"
+    )
+    car_standard_features = relationship(
+        "CarStandardFeatures", back_populates="car_sell_standard_features"
+    )
 
 
 class CarSellImages(Base):
@@ -192,12 +200,12 @@ class OTPVerification(Base):
     verified_at = Column(DateTime)
     deleted = Column(Boolean)
 
+
 class CarBodyType(Base):
     __tablename__ = "car_body_type"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     body_type_name = Column(String(50))
     body_type_image = Column(Text)
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
-    
