@@ -27,6 +27,7 @@ class User(Base):
 
     country = relationship("Country", back_populates="user")
     car_for_sale = relationship("CarForSale", back_populates="user")
+    book_a_test_drive = relationship("BookATestDrive", back_populates="user")
 
 
 class Country(Base):
@@ -157,6 +158,7 @@ class CarForSale(Base):
         "CarSellStandardFeatures", back_populates="car_for_sale"
     )
     car_sell_images = relationship("CarSellImages", back_populates="car_for_sale")
+    book_a_test_drive = relationship("BookATestDrive", back_populates="car_for_sale")
 
 
 class CarSellStandardFeatures(Base):
@@ -209,3 +211,19 @@ class CarBodyType(Base):
     body_type_image = Column(Text)
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
+
+class BookATestDrive(Base):
+    __tablename__ = "book_a_test_drive"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    car_id = Column(Integer, ForeignKey("car_for_sale.id"))
+    date = Column(DateTime)
+    time = Column(String(50))
+    phone_number = Column(String(50))
+    location_choice = Column(String(50))
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+    car_for_sale = relationship("CarForSale", back_populates="book_a_test_drive")
+    user = relationship("User", back_populates="book_a_test_drive")

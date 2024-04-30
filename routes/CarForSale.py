@@ -37,9 +37,11 @@ def save_uploaded_file(file: UploadFile):
         f.write(file.file.read())
     return random_filename
 
+
 def generate_short_stock_number():
     short_stock_number = str(uuid.uuid4())[:8]  # Generate an eight-character UUID
     return short_stock_number
+
 
 @router.get("/list")
 async def get_car_for_sale(
@@ -127,6 +129,7 @@ async def get_car_make_models(
     end_kilometers: int = Query(None),
     car_transmission: str = Query(None),
     fuel_type: str = Query(None),
+    shape: str = Query(None),
     db: Session = Depends(get_db),
 ):
 
@@ -166,6 +169,9 @@ async def get_car_make_models(
     if fuel_type:
         query = query.filter(models.CarForSale.car_fuel_type == fuel_type)
 
+    if shape:
+        query = query.filter(models.CarForSale.car_body_type == shape)
+        
     car_for_sale_list = query.all()
 
     count_cars_for_sale = query.filter(
@@ -346,9 +352,9 @@ async def create_car_for_sale(
     # Combine the last car ID with the short stock number
     if last_car is None:
         new_stock_number = f"{short_stock_number}1"
-    else:    
+    else:
         new_stock_number = f"{short_stock_number}{last_car.id}"
-    
+
     add_car_for_sale = models.CarForSale(
         stock_number=new_stock_number,  # This should be generated dynamically
         user_id=user_id,
@@ -435,7 +441,8 @@ async def update_car_for_sale(
     seller_phone_number: str = Form(None),
     seller_email: str = Form(None),
     car_seller_name: str = Form(None),
-    car_images: Optional[List[UploadFile]] = File(None),  # Corrected type declaration
+    car_images: List[UploadFile] = File(None),  # Corrected type declaration
+    # car_images: List[UploadFile] = File(...),  # Corrected type declaration
     cover_image: Optional[UploadFile] = File(None),
     car_standard_features: List[str] = Form(None),  # Assuming these are integer IDs
     db: Session = Depends(get_db),
@@ -506,6 +513,17 @@ async def update_car_for_sale(
     check_car_exist.updated_at = datetime.now()
     db.commit()
 
+    if car_images:
+        for image in car_images:
+            picture_path = save_uploaded_file(image)
+            car_sell_images = models.CarSellImages(
+                car_for_sale_id=car_id,
+                image_name=picture_path,
+                created_at=datetime.now(),
+            )
+            db.add(car_sell_images)
+            db.commit()
+
     for standard_feature in car_standard_features:
 
         check_if_feature_exist = (
@@ -555,3 +573,57 @@ async def delete_car_for_sale(id: int, db: db_dependency):
     )
     db.commit()
     return {"message": "Car for sale deleted successfully"}
+
+
+@router.get("/car_details")
+async def get_car_details(id: str, db: db_dependency):
+    car_detail = (
+        db.query(models.CarForSale).filter(models.CarForSale.stock_number == id).first()
+    )
+    if car_detail is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Car details can not be found"
+        )
+
+    car_details = []
+
+    car_detail.brand = (
+        db.query(models.CarBrand)
+        .filter(models.CarBrand.id == car_detail.car_brand_id)
+        .options(load_only(models.CarBrand.name))
+        .first()
+    )
+    car_detail.model = (
+        db.query(models.CarModel)
+        .filter(models.CarModel.id == car_detail.car_model_id)
+        .options(load_only(models.CarModel.brand_model_name))
+        .first()
+    )
+    car_detail.car_images = (
+        db.query(models.CarSellImages)
+        .filter(models.CarSellImages.car_for_sale_id == car_detail.id)
+        .options(load_only(models.CarSellImages.image_name))
+        .all()
+    )
+    # Fetch and attach the features to the car object
+    features_list = (
+        db.query(models.CarStandardFeatures)
+        .join(
+            models.CarSellStandardFeatures,
+            models.CarStandardFeatures.id
+            == models.CarSellStandardFeatures.car_standard_features_id,
+        )
+        .filter(models.CarSellStandardFeatures.car_for_sale_id == car_detail.id)
+        .options(load_only(models.CarStandardFeatures.feature_name))
+        .all()
+    )
+    # car.features = [features.feature_name in features_list for features in features_list]
+    car_detail.features = [feature for feature in features_list]
+    car_detail.features_ids = [feature.id for feature in features_list]
+    # Add car_cover_image field to each car object
+    car_cover_image = "/CarSellImages/" + car_detail.cover_image
+    car_detail.cover_image = car_cover_image
+
+    car_details.append(car_detail)
+
+    return car_details

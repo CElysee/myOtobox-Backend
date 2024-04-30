@@ -205,3 +205,11 @@ class CarBodyTypeUpdate(BaseModel):
     body_type_name: Optional[str] = None
     body_type_image: Optional[str] = None
     updated_at: Optional[datetime] = None    
+    
+class BookATestDriveCreate(BaseModel):
+    user_id: int
+    car_id: str
+    phone_number: str
+    location_choice: str
+    date: str
+    time: str 

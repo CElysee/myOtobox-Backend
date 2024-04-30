@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette import status
 from fastapi.staticfiles import StaticFiles
 
-from routes import (auth, country, CarBrand, CarModel, CarTrim, CarStandardFeautures, CarFuelType, CarForSale, CarBodyType)
+from routes import (auth, country, CarBrand, CarModel, CarTrim, CarStandardFeautures, CarFuelType, CarForSale, CarBodyType, BookATestDrive)
 from routes.auth import get_current_user, user_dependency
 
 import models
@@ -16,13 +16,18 @@ app = FastAPI()
 
 models.Base.metadata.create_all(bind=engine)
 
+# Configure CORS
+origins = [
+    "http://localhost:5173",  # Your frontend origin
+    # Add other allowed origins as needed
+]
 # Configure CORS middleware
 app.add_middleware(
     CORSMiddleware,
     # allow_origins=origins,
-    allow_origins=["http://localhost:5173","http://localhost:5174"],
+    allow_origins=["*"],  # Allow requests from all origins
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
 
@@ -36,6 +41,7 @@ app.include_router(CarStandardFeautures.router)
 app.include_router(CarFuelType.router)
 app.include_router(CarForSale.router)
 app.include_router(CarBodyType.router)
+app.include_router(BookATestDrive.router)
 
 app.mount("/CarSellImages", StaticFiles(directory="CarSellImages"), name="images")
 app.mount("/BrandLogo", StaticFiles(directory="BrandLogo"), name="images")

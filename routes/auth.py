@@ -72,8 +72,8 @@ def authenticated_user(username: str, password: str, db):
     return user
 
 
-def create_access_token(username: str, user_id: int, expires_delta: timedelta, email: str, role: str):
-    encode = {'sub': username, 'id': user_id, 'email': email, 'role': role}
+def create_access_token(username: str, user_id: int, expires_delta: timedelta, email: str, role: str, name: str):
+    encode = {'sub': username, 'id': user_id, 'email': email, 'role': role, 'name': name}
     expires = datetime.utcnow() + expires_delta
     encode.update({'exp': expires})
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
@@ -105,6 +105,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)], db: Se
         username: str = payload.get('sub')
         user_id: int = payload.get('id')
         user_role: str = payload.get('role')
+        name: str = payload.get('name')
         user = db.query(models.User).filter(models.User.username == username).first()
         if username is None or user_id is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate user.")
@@ -135,6 +136,7 @@ class UserToken(BaseModel):
     token_type: str
     role: str
     userId: int
+    name: str
 
 
 UPLOAD_FOLDER = "CarSellImages"
@@ -453,7 +455,7 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate user.")
 
-    token = create_access_token(user.username, user.id, timedelta(minutes=60), user.email, user.role)
+    token = create_access_token(user.username, user.id, timedelta(minutes=60), user.email, user.role, user.firstName)
 
     return {'message': "Successfully Authenticated", 'access_token': token, 'token_type': 'bearer'}
 
@@ -465,10 +467,10 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
 
-    token = create_access_token(user.username, user.id, timedelta(minutes=60), user.email, user.role)
+    token = create_access_token(user.username, user.id, timedelta(minutes=60), user.email, user.role, user.firstName)
 
     return {'message': "Successfully Authenticated", 'access_token': token, 'token_type': 'bearer', 'role': user.role,
-            'userId': user.id}
+            'userId': user.id, 'name': user.firstName}
 
 
 @router.post("/check_username", status_code=status.HTTP_200_OK)
