@@ -13,8 +13,10 @@ class User(BaseModel):
     role: str
     phone_number: Optional[str]
     country_id: Optional[int]
+
     class Config:
         from_attributes = True
+
 
 class UserCreate(User):
     pass
@@ -32,6 +34,7 @@ class UserOut(BaseModel):
     # country_id: int
     # user_profile_id: int
 
+
 class UserUpdate(BaseModel):
     firstName: Optional[str]
     lastName: Optional[str]
@@ -41,7 +44,8 @@ class UserUpdate(BaseModel):
     role: Optional[str]
     is_active: Optional[bool]
     country_id: Optional[int]
-    
+
+
 class UserCheck(BaseModel):
     email: EmailStr
 
@@ -67,15 +71,16 @@ class CountryOut(CountryBase):
     class Config:
         from_attributes = True
 
-    
+
 class CarBrandBase(BaseModel):
     name: str
     country_name: str
     brand_logo: FilePath  # Path to the uploaded image on the server
-    created_at: Optional[datetime] = None 
+    created_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
 
 class CarBrandUpdate(BaseModel):
     name: Optional[str]
@@ -122,9 +127,11 @@ class CarTrimUpdate(BaseModel):
 class Feature(BaseModel):
     feature_name: str
 
+
 class CarStandardFeaturesBase(BaseModel):
     features: List[Feature]
     created_at: Optional[datetime] = None
+
 
 class CarStandardFeaturesUpdate(BaseModel):
     feature_name: Optional[str]
@@ -197,19 +204,60 @@ class OTPVerificationUpdate(BaseModel):
     phone_number: str
     otp_code: int
 
+
 class CarBodyTypeCreate(BaseModel):
     body_type_name: str
-    body_type_image: str    
-    
+    body_type_image: str
+
+
 class CarBodyTypeUpdate(BaseModel):
     body_type_name: Optional[str] = None
     body_type_image: Optional[str] = None
-    updated_at: Optional[datetime] = None    
-    
+    updated_at: Optional[datetime] = None
+
+
 class BookATestDriveCreate(BaseModel):
     user_id: int
     car_id: str
     phone_number: str
     location_choice: str
     date: str
-    time: str 
+    time: str
+
+
+class ImportOnOrderCreate(BaseModel):
+    user_id: int
+    price_range: str
+    fuel_type: str
+    transmission_type: str
+    car_brand_id: int
+    car_model_id: int
+    car_trim_id: int
+    manufacture_year_from: str
+    manufacture_year_to: str
+    kilometers_from: str
+    kilometers_to: str
+    names: str
+    phone_number: str
+    email: str
+    exterior_color: str
+    order_note: str
+    car_color: str
+
+class TaxCalculatorCreate(BaseModel):
+    user_id: int
+    car_brand_id: int
+    car_model_id: int
+    car_trim_id: int
+    weight: int
+    engine_cc: int
+    year_of_manufacture: int
+    price_when_new: int
+    amortisation_period: str
+    current_residual_value: int
+    freight_cost: int
+    insurance: int
+    cif_kigali: int
+    current_value: int
+    quitus_fiscal: str
+    vehicle_category: str

@@ -28,6 +28,8 @@ class User(Base):
     country = relationship("Country", back_populates="user")
     car_for_sale = relationship("CarForSale", back_populates="user")
     book_a_test_drive = relationship("BookATestDrive", back_populates="user")
+    import_on_order = relationship("ImportOnOrder", back_populates="user")
+    tax_calculator = relationship("TaxCalculator", back_populates="user")
 
 
 class Country(Base):
@@ -55,6 +57,8 @@ class CarBrand(Base):
     car_model = relationship("CarModel", back_populates="car_brand")
     car_trim = relationship("CarTrim", back_populates="car_brand")
     car_for_sale = relationship("CarForSale", back_populates="car_brand")
+    import_on_order = relationship("ImportOnOrder", back_populates="car_brand")
+    tax_calculator = relationship("TaxCalculator", back_populates="car_brand")
 
 
 class CarModel(Base):
@@ -71,6 +75,8 @@ class CarModel(Base):
     car_brand = relationship("CarBrand", back_populates="car_model")
     car_trim = relationship("CarTrim", back_populates="car_model")
     car_for_sale = relationship("CarForSale", back_populates="car_model")
+    import_on_order = relationship("ImportOnOrder", back_populates="car_model")
+    tax_calculator = relationship("TaxCalculator", back_populates="car_model")
 
 
 class CarTrim(Base):
@@ -89,6 +95,8 @@ class CarTrim(Base):
     car_brand = relationship("CarBrand", back_populates="car_trim")
     car_model = relationship("CarModel", back_populates="car_trim")
     car_for_sale = relationship("CarForSale", back_populates="car_trim")
+    import_on_order = relationship("ImportOnOrder", back_populates="car_trim")
+    tax_calculator = relationship("TaxCalculator", back_populates="car_trim")
 
 
 class CarStandardFeatures(Base):
@@ -227,3 +235,70 @@ class BookATestDrive(Base):
 
     car_for_sale = relationship("CarForSale", back_populates="book_a_test_drive")
     user = relationship("User", back_populates="book_a_test_drive")
+    
+    
+class ImportOnOrder(Base):
+    __tablename__ = "import_on_order"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    price_range = Column(String(50))
+    fuel_type = Column(String(50))
+    transmission_type = Column(String(50))
+    car_brand_id = Column(Integer, ForeignKey("car_brands.id"), nullable=True)
+    car_model_id = Column(Integer, ForeignKey("car_models.id"), nullable=True)
+    car_trim_id = Column(Integer, ForeignKey("car_trims.id"), nullable=True)
+    manufacture_year_from = Column(String(50))
+    manufacture_year_to = Column(String(50))
+    kilometers_from = Column(String(50))
+    kilometers_to = Column(String(50))
+    names = Column(String(50))
+    phone_number = Column(String(50))
+    email = Column(String(50))
+    exterior_color = Column(String(50))
+    car_color = Column(String(50))
+    order_note =  Column(Text)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+    
+    user = relationship("User", back_populates="import_on_order")
+    car_brand = relationship("CarBrand", back_populates="import_on_order")
+    car_model = relationship("CarModel", back_populates="import_on_order")
+    car_trim = relationship("CarTrim", back_populates="import_on_order") 
+    
+    
+class TaxCalculator(Base):
+    __tablename__ = "tax_calculator"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    car_brand_id = Column(Integer, ForeignKey("car_brands.id"))
+    car_model_id = Column(Integer, ForeignKey("car_models.id"))
+    car_trim_id = Column(Integer, ForeignKey("car_trims.id"), nullable=True)
+    weight = Column(String(50))
+    engine_cc = Column(String(50))
+    year_of_manufacture = Column(String(50))
+    price_when_new = Column(String(50))
+    amortisation_period = Column(String(50))
+    current_residual_value = Column(String(50))
+    freight_cost = Column(String(50))
+    insurance = Column(String(50))
+    cif_kigali = Column(String(50))
+    current_value = Column(String(50))
+    quitus_fiscal = Column(String(50))
+    vehicle_category = Column(Text)
+    import_duty_tax = Column(String(50))
+    excise_duty_tax = Column(String(50))
+    vat_tax = Column(String(50))
+    idl_tax = Column(String(50))
+    withholding_tax = Column(String(50))
+    plate_fee = Column(String(50))
+    aul_tax = Column(String(50))
+    total_tax = Column(String(50))
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+    
+    user = relationship("User", back_populates="tax_calculator")
+    car_brand = relationship("CarBrand", back_populates="tax_calculator")
+    car_model = relationship("CarModel", back_populates="tax_calculator")
+    car_trim = relationship("CarTrim", back_populates="tax_calculator")    

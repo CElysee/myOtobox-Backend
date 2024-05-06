@@ -1,10 +1,24 @@
 from fastapi import FastAPI, HTTPException
+
 # from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 from starlette import status
 from fastapi.staticfiles import StaticFiles
 
-from routes import (auth, country, CarBrand, CarModel, CarTrim, CarStandardFeautures, CarFuelType, CarForSale, CarBodyType, BookATestDrive)
+from routes import (
+    auth,
+    country,
+    CarBrand,
+    CarModel,
+    CarTrim,
+    CarStandardFeautures,
+    CarFuelType,
+    CarForSale,
+    CarBodyType,
+    BookATestDrive,
+    ImportOnOrder,
+    TaxCalculator,
+)
 from routes.auth import get_current_user, user_dependency
 
 import models
@@ -42,16 +56,21 @@ app.include_router(CarFuelType.router)
 app.include_router(CarForSale.router)
 app.include_router(CarBodyType.router)
 app.include_router(BookATestDrive.router)
+app.include_router(ImportOnOrder.router)
+app.include_router(TaxCalculator.router)
+
 
 app.mount("/CarSellImages", StaticFiles(directory="CarSellImages"), name="images")
 app.mount("/BrandLogo", StaticFiles(directory="BrandLogo"), name="images")
 app.mount("/BrandModel", StaticFiles(directory="BrandModel"), name="images")
 app.mount("/BodyTypeImage", StaticFiles(directory="BodyTypeImage"), name="images")
 # Your cache instance, replace with your specific cache implementation
-cache = TTLCache(maxsize=100, ttl=600)  # TTLCache as an example, use your actual cache implementation
+cache = TTLCache(
+    maxsize=100, ttl=600
+)  # TTLCache as an example, use your actual cache implementation
 
 
-@app.get('/', status_code=status.HTTP_200_OK)
+@app.get("/", status_code=status.HTTP_200_OK)
 async def user(user: user_dependency, db: db_dependency):
     user = db.query(models.User).all()
     return user
@@ -68,6 +87,7 @@ async def get_image(filename: str):
 
     return image_data
 
+
 @app.get("/BrandLogo/{filename}")
 async def get_image(filename: str):
     """Get an image by filename."""
@@ -78,6 +98,7 @@ async def get_image(filename: str):
         image_data = f.read()
 
     return image_data
+
 
 @app.get("/BrandModel/{filename}")
 async def get_image(filename: str):
@@ -90,6 +111,7 @@ async def get_image(filename: str):
 
     return image_data
 
+
 @app.get("/BodyTypeImage/{filename}")
 async def get_image(filename: str):
     """Get an image by filename."""
@@ -100,6 +122,7 @@ async def get_image(filename: str):
         image_data = f.read()
 
     return image_data
+
 
 @app.post("/clear_cache")
 def clear_cache():
