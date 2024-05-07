@@ -627,3 +627,23 @@ async def get_car_details(id: str, db: db_dependency):
     car_details.append(car_detail)
 
     return car_details
+
+@router.get("/search")
+async def search_car_for_sale(keyword: str, db: db_dependency):
+    keywords = db.query(models.CarForSale).filter(models.CarForSale.car_name_info.ilike(f"%{keyword}%")).all()
+    brand_keywords = db.query(models.CarBrand).filter(models.CarBrand.name.ilike(f"%{keyword}%")).all()
+    # return brand_keywords
+    
+    # Return only car_name_info from the list and limit to 10
+    return [keyword.car_name_info for keyword in keywords][:10]
+
+@router.get("/search/{keyword}")
+async def search_car_for_sale(keyword: str, db: db_dependency):
+    keywords = db.query(models.CarForSale).filter(models.CarForSale.car_name_info == keyword).first()
+    car_brand = keywords.car_brand
+    car_model = keywords.car_model
+    
+    # Return only car_brand_name and car_model_name from the list
+    return {"car_brand": car_brand.name, "car_model": car_model.brand_model_name}
+    
+    return keywords
