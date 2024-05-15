@@ -230,6 +230,7 @@ class BookATestDrive(Base):
     time = Column(String(50))
     phone_number = Column(String(50))
     location_choice = Column(String(50))
+    booking_status = Column(String(50))
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
 
@@ -258,6 +259,7 @@ class ImportOnOrder(Base):
     exterior_color = Column(String(50))
     car_color = Column(String(50))
     order_note =  Column(Text)
+    order_status = Column(String(50))
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
     

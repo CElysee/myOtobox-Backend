@@ -10,7 +10,7 @@ class User(BaseModel):
     gender: str
     email: EmailStr
     password: str
-    role: str
+    role: Optional[str] = "user"
     phone_number: Optional[str]
     country_id: Optional[int]
 
@@ -221,9 +221,12 @@ class BookATestDriveCreate(BaseModel):
     car_id: str
     phone_number: str
     location_choice: str
+    booking_status: Optional[str] = None
     date: str
     time: str
-
+    
+class BookATestDriveUpdateBookingStatus(BaseModel):
+    booking_status: str   
 
 class ImportOnOrderCreate(BaseModel):
     user_id: int
@@ -243,7 +246,11 @@ class ImportOnOrderCreate(BaseModel):
     exterior_color: str
     order_note: str
     car_color: str
+    order_status: Optional[str] = None
 
+class ImportOnOrderUpdateStatus(BaseModel):
+    order_status: str
+    
 class TaxCalculatorCreate(BaseModel):
     user_id: int
     car_brand_id: int

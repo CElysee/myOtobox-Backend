@@ -18,6 +18,7 @@ from routes import (
     BookATestDrive,
     ImportOnOrder,
     TaxCalculator,
+    DashboardStats,
 )
 from routes.auth import get_current_user, user_dependency
 
@@ -58,6 +59,7 @@ app.include_router(CarBodyType.router)
 app.include_router(BookATestDrive.router)
 app.include_router(ImportOnOrder.router)
 app.include_router(TaxCalculator.router)
+app.include_router(DashboardStats.router)
 
 
 app.mount("/CarSellImages", StaticFiles(directory="CarSellImages"), name="images")
