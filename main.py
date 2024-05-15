@@ -33,7 +33,7 @@ models.Base.metadata.create_all(bind=engine)
 
 # Configure CORS
 origins = [
-    "http://localhost:5173",  # Your frontend origin
+    "http://localhost:5173", "https://myotobox.rw", "http://myotobox.rw" # Your frontend origin
     # Add other allowed origins as needed
 ]
 # Configure CORS middleware
