@@ -1,19 +1,24 @@
 from datetime import datetime
 from typing import Optional, List
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, File, UploadFile, Form
 from database import db_dependency, get_db
 from starlette import status
 import models
 import schemas
+from UploadFile import FileHandler
 from sqlalchemy import asc
 from sqlalchemy.orm import Session
+import pandas as pd
+from io import BytesIO
+import csv
+from io import StringIO  # new import
 
 router = APIRouter(tags=["CarTrim"], prefix="/car_trim")
 
 
 @router.get("/list")
 async def get_car_trims(db: db_dependency):
-    car_trim_list = db.query(models.CarTrim).all()
+    car_trim_list = db.query(models.CarTrim).order_by(models.CarTrim.id.desc()).all()
     car_brand_count = db.query(models.CarBrand).count()
     car_model_count = db.query(models.CarModel).count()
     car_trim_count = db.query(models.CarTrim).count()
@@ -103,12 +108,53 @@ async def create_car_trim(car_trim: schemas.CarTrimBase, db: Session = Depends(g
         engine=car_trim.engine,
         curb_weight=car_trim.curb_weight,
         trim_hp=car_trim.trim_hp,
+        trim_production_years=car_trim.trim_production_years,
         created_at=datetime.now(),
     )
     db.add(car_trim)
     db.commit()
     db.refresh(car_trim)
     return {"message": "Car trim created successfully", "data": car_trim}
+
+
+@router.post("/create_excel")
+async def create_car_trim_from_excel(
+    db: Session = Depends(get_db), car_brand_id: str = Form(...), file: UploadFile = File(...), 
+):
+    if not file.filename.endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Invalid file type")
+
+    df = pd.read_csv(file.file)
+    for i, row in df.iterrows():
+        name = row["ModelName"]
+        chech_model_name = (
+            db.query(models.CarModel)
+            .filter(models.CarModel.brand_id == car_brand_id, models.CarModel.brand_model_name.ilike(f"%{name}%"))
+            .first()
+        )
+        if not chech_model_name:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Model {name} not found"
+            )
+        check_trim = db.query(models.CarTrim).filter(models.CarTrim.trim_name == row["TrimName"]).first()    
+        
+        if check_trim:
+            continue
+        else:
+            add_car_trim = models.CarTrim(
+                car_brand_id=car_brand_id,
+                car_model_id=chech_model_name.id,
+                trim_name=row["TrimName"],
+                engine=row["TrimEngineCC"],
+                curb_weight=row["TrimWeight"],
+                trim_hp=row["TrimHP"],
+                trim_production_years=row["TrimProductionYear"],
+                created_at=datetime.now(),
+            )
+            db.add(add_car_trim)
+            db.commit()
+
+    return {"message": "Successfully uploaded Car Trim"}
 
 
 @router.get("/get/{id}")
@@ -127,18 +173,18 @@ async def update_car_trim(id: int, car_trim: schemas.CarTrimUpdate, db: db_depen
     # Update only the fields with non-None values from car_trim
     if car_trim.trim_name:
         check_trim.trim_name = car_trim.trim_name
-        
+
     if car_trim.car_model_id:
         check_trim.car_model_id = car_trim.car_model_id
-        
+
     if car_trim.engine:
         check_trim.engine = car_trim.engine
-        
+
     if car_trim.curb_weight:
         check_trim.curb_weight = car_trim.curb_weight
     if car_trim.trim_hp:
         check_trim.trim_hp = car_trim.trim_hp
-            
+
     check_trim.updated_at = datetime.now()
     db.commit()
     return {"message": "Car trim updated successfully", "data": car_trim}

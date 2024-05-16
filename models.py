@@ -89,6 +89,7 @@ class CarTrim(Base):
     engine = Column(String(50), nullable=True)
     curb_weight = Column(String(50), nullable=True)
     trim_hp = Column(String(50), nullable=True)
+    trim_production_years = Column(String(50), nullable=True)
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
 

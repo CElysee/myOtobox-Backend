@@ -1,17 +1,25 @@
 from datetime import datetime
 from typing import Optional, List
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, File, UploadFile, Form
 from database import db_dependency
 from starlette import status
 import models
 import schemas
+import pandas as pd
+from io import BytesIO
+import csv
+from io import StringIO  # new import
 
 router = APIRouter(tags=["CarStandardFeatures"], prefix="/car_standard_features")
 
 
 @router.get("/list")
 async def get_car_standard_features(db: db_dependency):
-    car_standard_features_list = db.query(models.CarStandardFeatures).order_by(models.CarStandardFeatures.id.desc()).all()
+    car_standard_features_list = (
+        db.query(models.CarStandardFeatures)
+        .order_by(models.CarStandardFeatures.id.desc())
+        .all()
+    )
     car_brand_count = db.query(models.CarBrand).count()
     car_model_count = db.query(models.CarModel).count()
     car_trim_count = db.query(models.CarTrim).count()
@@ -46,7 +54,7 @@ async def get_car_standard_features(id: int, db: db_dependency):
 async def create_car_standard_features(
     car_standard_features: schemas.CarStandardFeaturesBase, db: db_dependency
 ):
-    
+
     for feature in car_standard_features.features:
         check_car_standard_features = (
             db.query(models.CarStandardFeatures)
@@ -58,7 +66,6 @@ async def create_car_standard_features(
             db_car_standard_features = models.CarStandardFeatures(
                 feature_name=feature.feature_name,
                 created_at=datetime.now(),
-                updated_at=datetime.now(),
             )
             db.add(db_car_standard_features)
             db.commit()
@@ -68,6 +75,32 @@ async def create_car_standard_features(
         "message": "Car Standard Features created successfully",
         # "data": car_standard_features.feature_name,
     }
+
+
+@router.post("/create_excel")
+async def upload_using_excel(db: db_dependency, file: UploadFile = File(...)):
+    if not file.filename.endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Invalid file type")
+
+    df = pd.read_csv(file.file)
+    for i, row in df.iterrows():
+        feature_name = row["FeatureName"]
+        check_feature = (
+            db.query(models.CarStandardFeatures)
+            .filter(models.CarStandardFeatures.feature_name.ilike(f"%{feature_name}%"))
+            .first()
+        )
+
+        if check_feature:
+            continue
+        else:
+            car_standard_features = models.CarStandardFeatures(
+                feature_name=feature_name,
+                created_at=datetime.now(),
+            )
+            db.add(car_standard_features)
+            db.commit()
+    return {"message": "Successfully uploaded Car Standard Features"}        
 
 
 @router.put("/update/{id}")

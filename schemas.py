@@ -111,6 +111,7 @@ class CarTrimBase(BaseModel):
     engine: Optional[str] = None
     trim_hp: Optional[str] = None
     curb_weight: Optional[str] = None
+    trim_production_years: Optional[str] = None
     created_at: Optional[datetime] = None
 
 

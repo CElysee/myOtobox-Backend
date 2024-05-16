@@ -10,6 +10,10 @@ from schemas import CarBrandBase, CarBrandUpdate
 from typing import Optional, List
 from database import db_dependency, get_db
 from sqlalchemy import asc
+import pandas as pd
+from io import BytesIO
+import csv
+from io import StringIO # new import
 
 router = APIRouter(tags=["CarBrand"], prefix="/car_brand")
 
@@ -58,7 +62,6 @@ async def create_car_brand(
     db.commit()
     db.refresh(car_brand)
     return {"message": "Car brand created successfully"}
-
 
 @router.get("/get/{id}")
 async def get_car_brand(id: int, db: db_dependency):
