@@ -102,9 +102,10 @@ async def upload_using_excel(
         )
         
         if not chech_brand:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Brand {name} not found"
-            )
+            # raise HTTPException(
+            #     status_code=status.HTTP_404_NOT_FOUND, detail=f"Brand {name} not found"
+            # )
+            continue
         
         check_model = (
             db.query(models.CarModel)
