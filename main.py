@@ -19,6 +19,7 @@ from routes import (
     ImportOnOrder,
     TaxCalculator,
     DashboardStats,
+    CarForRent,
 )
 from routes.auth import get_current_user, user_dependency
 
@@ -55,6 +56,7 @@ app.include_router(CarTrim.router)
 app.include_router(CarStandardFeautures.router)
 app.include_router(CarFuelType.router)
 app.include_router(CarForSale.router)
+app.include_router(CarForRent.router)
 app.include_router(CarBodyType.router)
 app.include_router(BookATestDrive.router)
 app.include_router(ImportOnOrder.router)
@@ -63,6 +65,7 @@ app.include_router(DashboardStats.router)
 
 
 app.mount("/CarSellImages", StaticFiles(directory="CarSellImages"), name="images")
+app.mount("/CarRentImages", StaticFiles(directory="CarRentImages"), name="images")
 app.mount("/BrandLogo", StaticFiles(directory="BrandLogo"), name="images")
 app.mount("/BrandModel", StaticFiles(directory="BrandModel"), name="images")
 app.mount("/BodyTypeImage", StaticFiles(directory="BodyTypeImage"), name="images")
@@ -121,6 +124,17 @@ async def get_image(filename: str):
         raise HTTPException(status_code=404, detail="Image not found")
 
     with open(f"BodyTypeImage/{filename}", "rb") as f:
+        image_data = f.read()
+
+    return image_data
+
+@app.get("/CarRentImages/{filename}")
+async def get_image(filename: str):
+    """Get an image by filename."""
+    if not os.path.exists(f"CarRentImages/{filename}"):
+        raise HTTPException(status_code=404, detail="Image not found")
+
+    with open(f"CarRentImages/{filename}", "rb") as f:
         image_data = f.read()
 
     return image_data

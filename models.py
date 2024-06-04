@@ -27,6 +27,7 @@ class User(Base):
 
     country = relationship("Country", back_populates="user")
     car_for_sale = relationship("CarForSale", back_populates="user")
+    cars_for_rent = relationship("CarsForRent", back_populates="user")
     book_a_test_drive = relationship("BookATestDrive", back_populates="user")
     import_on_order = relationship("ImportOnOrder", back_populates="user")
     tax_calculator = relationship("TaxCalculator", back_populates="user")
@@ -57,6 +58,7 @@ class CarBrand(Base):
     car_model = relationship("CarModel", back_populates="car_brand")
     car_trim = relationship("CarTrim", back_populates="car_brand")
     car_for_sale = relationship("CarForSale", back_populates="car_brand")
+    cars_for_rent = relationship("CarsForRent", back_populates="car_brand")
     import_on_order = relationship("ImportOnOrder", back_populates="car_brand")
     tax_calculator = relationship("TaxCalculator", back_populates="car_brand")
 
@@ -75,6 +77,7 @@ class CarModel(Base):
     car_brand = relationship("CarBrand", back_populates="car_model")
     car_trim = relationship("CarTrim", back_populates="car_model")
     car_for_sale = relationship("CarForSale", back_populates="car_model")
+    cars_for_rent = relationship("CarsForRent", back_populates="car_model")
     import_on_order = relationship("ImportOnOrder", back_populates="car_model")
     tax_calculator = relationship("TaxCalculator", back_populates="car_model")
 
@@ -96,6 +99,7 @@ class CarTrim(Base):
     car_brand = relationship("CarBrand", back_populates="car_trim")
     car_model = relationship("CarModel", back_populates="car_trim")
     car_for_sale = relationship("CarForSale", back_populates="car_trim")
+    cars_for_rent = relationship("CarsForRent", back_populates="car_trim")
     import_on_order = relationship("ImportOnOrder", back_populates="car_trim")
     tax_calculator = relationship("TaxCalculator", back_populates="car_trim")
 
@@ -111,6 +115,7 @@ class CarStandardFeatures(Base):
     car_sell_standard_features = relationship(
         "CarSellStandardFeatures", back_populates="car_standard_features"
     )
+    car_rent_standard_features = relationship("CarRentStandardFeatures", back_populates="car_standard_features")
 
 
 class CarFuelType(Base):
@@ -168,6 +173,58 @@ class CarForSale(Base):
     )
     car_sell_images = relationship("CarSellImages", back_populates="car_for_sale")
     book_a_test_drive = relationship("BookATestDrive", back_populates="car_for_sale")
+    
+    
+class CarsForRent(Base):
+    __tablename__ = "cars_for_rent"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    stock_number = Column(Text)
+    car_name_info = Column(String(50))
+    car_year = Column(String(50))
+    car_brand_id = Column(Integer, ForeignKey("car_brands.id"))
+    car_model_id = Column(Integer, ForeignKey("car_models.id"))
+    car_trim_id = Column(Integer, ForeignKey("car_trims.id"))
+    car_price_per_day = Column(String(50))
+    car_price_per_week = Column(String(50))
+    car_price_per_month= Column(String(50))
+    car_price_per_day_up_country= Column(String(50))
+    car_price_per_week_up_country= Column(String(50))
+    car_price_per_month_up_country= Column(String(50))
+    car_mileage = Column(String(50))
+    car_vin_number = Column(String(50))
+    car_transmission = Column(String(50))
+    car_drive_train = Column(String(50))
+    car_fuel_type = Column(String(50))
+    car_fuel_consumption = Column(String(50))
+    car_engine_capacity = Column(String(50))
+    car_interior_color = Column(String(50))
+    car_exterior_color = Column(String(50))
+    car_body_type = Column(String(50))
+    car_location = Column(String(50))
+    car_registration_number = Column(String(50))
+    car_insurance = Column(String(50))
+    car_control_technique = Column(String(50))
+    renter_phone_number = Column(String(50))
+    renter_email = Column(String(50))
+    car_status = Column(String(50))
+    car_condition = Column(String(50))
+    car_renter_name = Column(String(50))
+    featured = Column(Boolean)
+    renter_note = Column(Text)
+    cover_image = Column(String(50))
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+    user = relationship("User", back_populates="cars_for_rent")
+    car_brand = relationship("CarBrand", back_populates="cars_for_rent")
+    car_model = relationship("CarModel", back_populates="cars_for_rent")
+    car_trim = relationship("CarTrim", back_populates="cars_for_rent")
+    car_rent_standard_features = relationship(
+        "CarRentStandardFeatures", back_populates="cars_for_rent"
+    )
+    car_rent_images = relationship("CarRentImages", back_populates="cars_for_rent")    
 
 
 class CarSellStandardFeatures(Base):
@@ -185,6 +242,22 @@ class CarSellStandardFeatures(Base):
     car_standard_features = relationship(
         "CarStandardFeatures", back_populates="car_sell_standard_features"
     )
+    
+class CarRentStandardFeatures(Base):
+    __tablename__ = "car_rent_standard_features"
+
+    id = Column(Integer, primary_key=True, index=True)
+    car_for_rent_id = Column(Integer, ForeignKey("cars_for_rent.id"))
+    car_standard_features_id = Column(Integer, ForeignKey("car_standard_features.id"))
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+    cars_for_rent = relationship(
+        "CarsForRent", back_populates="car_rent_standard_features"
+    )
+    car_standard_features = relationship(
+        "CarStandardFeatures", back_populates="car_rent_standard_features"
+    )    
 
 
 class CarSellImages(Base):
@@ -198,7 +271,17 @@ class CarSellImages(Base):
 
     car_for_sale = relationship("CarForSale", back_populates="car_sell_images")
 
+class CarRentImages(Base):
+    __tablename__ = "car_rent_images"
 
+    id = Column(Integer, primary_key=True, index=True)
+    car_for_rent_id = Column(Integer, ForeignKey("cars_for_rent.id"))
+    image_name = Column(String(50))
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+
+    cars_for_rent = relationship("CarsForRent", back_populates="car_rent_images")
+    
 class OTPVerification(Base):
     __tablename__ = "otp_verification"
 
