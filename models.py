@@ -115,7 +115,9 @@ class CarStandardFeatures(Base):
     car_sell_standard_features = relationship(
         "CarSellStandardFeatures", back_populates="car_standard_features"
     )
-    car_rent_standard_features = relationship("CarRentStandardFeatures", back_populates="car_standard_features")
+    car_rent_standard_features = relationship(
+        "CarRentStandardFeatures", back_populates="car_standard_features"
+    )
 
 
 class CarFuelType(Base):
@@ -173,8 +175,8 @@ class CarForSale(Base):
     )
     car_sell_images = relationship("CarSellImages", back_populates="car_for_sale")
     book_a_test_drive = relationship("BookATestDrive", back_populates="car_for_sale")
-    
-    
+
+
 class CarsForRent(Base):
     __tablename__ = "cars_for_rent"
 
@@ -188,10 +190,10 @@ class CarsForRent(Base):
     car_trim_id = Column(Integer, ForeignKey("car_trims.id"))
     car_price_per_day = Column(String(50))
     car_price_per_week = Column(String(50))
-    car_price_per_month= Column(String(50))
-    car_price_per_day_up_country= Column(String(50))
-    car_price_per_week_up_country= Column(String(50))
-    car_price_per_month_up_country= Column(String(50))
+    car_price_per_month = Column(String(50))
+    car_price_per_day_up_country = Column(String(50))
+    car_price_per_week_up_country = Column(String(50))
+    car_price_per_month_up_country = Column(String(50))
     car_mileage = Column(String(50))
     car_vin_number = Column(String(50))
     car_transmission = Column(String(50))
@@ -224,7 +226,7 @@ class CarsForRent(Base):
     car_rent_standard_features = relationship(
         "CarRentStandardFeatures", back_populates="cars_for_rent"
     )
-    car_rent_images = relationship("CarRentImages", back_populates="cars_for_rent")    
+    car_rent_images = relationship("CarRentImages", back_populates="cars_for_rent")
 
 
 class CarSellStandardFeatures(Base):
@@ -242,7 +244,8 @@ class CarSellStandardFeatures(Base):
     car_standard_features = relationship(
         "CarStandardFeatures", back_populates="car_sell_standard_features"
     )
-    
+
+
 class CarRentStandardFeatures(Base):
     __tablename__ = "car_rent_standard_features"
 
@@ -257,7 +260,7 @@ class CarRentStandardFeatures(Base):
     )
     car_standard_features = relationship(
         "CarStandardFeatures", back_populates="car_rent_standard_features"
-    )    
+    )
 
 
 class CarSellImages(Base):
@@ -271,6 +274,7 @@ class CarSellImages(Base):
 
     car_for_sale = relationship("CarForSale", back_populates="car_sell_images")
 
+
 class CarRentImages(Base):
     __tablename__ = "car_rent_images"
 
@@ -281,7 +285,8 @@ class CarRentImages(Base):
     updated_at = Column(DateTime)
 
     cars_for_rent = relationship("CarsForRent", back_populates="car_rent_images")
-    
+
+
 class OTPVerification(Base):
     __tablename__ = "otp_verification"
 
@@ -304,6 +309,7 @@ class CarBodyType(Base):
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
 
+
 class BookATestDrive(Base):
     __tablename__ = "book_a_test_drive"
 
@@ -320,8 +326,8 @@ class BookATestDrive(Base):
 
     car_for_sale = relationship("CarForSale", back_populates="book_a_test_drive")
     user = relationship("User", back_populates="book_a_test_drive")
-    
-    
+
+
 class ImportOnOrder(Base):
     __tablename__ = "import_on_order"
 
@@ -342,17 +348,17 @@ class ImportOnOrder(Base):
     email = Column(String(50))
     exterior_color = Column(String(50))
     car_color = Column(String(50))
-    order_note =  Column(Text)
+    order_note = Column(Text)
     order_status = Column(String(50))
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
-    
+
     user = relationship("User", back_populates="import_on_order")
     car_brand = relationship("CarBrand", back_populates="import_on_order")
     car_model = relationship("CarModel", back_populates="import_on_order")
-    car_trim = relationship("CarTrim", back_populates="import_on_order") 
-    
-    
+    car_trim = relationship("CarTrim", back_populates="import_on_order")
+
+
 class TaxCalculator(Base):
     __tablename__ = "tax_calculator"
 
@@ -383,8 +389,8 @@ class TaxCalculator(Base):
     total_tax = Column(String(50))
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
-    
+
     user = relationship("User", back_populates="tax_calculator")
     car_brand = relationship("CarBrand", back_populates="tax_calculator")
     car_model = relationship("CarModel", back_populates="tax_calculator")
-    car_trim = relationship("CarTrim", back_populates="tax_calculator")    
+    car_trim = relationship("CarTrim", back_populates="tax_calculator")

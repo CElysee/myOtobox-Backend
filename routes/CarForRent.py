@@ -611,7 +611,6 @@ async def get_car_details(id: str, db: db_dependency):
         )
 
     car_details = []
-
     car_detail.brand = (
         db.query(models.CarBrand)
         .filter(models.CarBrand.id == car_detail.car_brand_id)
@@ -625,20 +624,16 @@ async def get_car_details(id: str, db: db_dependency):
         .first()
     )
     car_detail.car_images = (
-        db.query(models.CarSellImages)
-        .filter(models.CarSellImages.car_for_rent_id == car_detail.id)
-        .options(load_only(models.CarSellImages.image_name))
+        db.query(models.CarRentImages)
+        .filter(models.CarRentImages.car_for_rent_id == car_detail.id)
+        .options(load_only(models.CarRentImages.image_name))
         .all()
     )
     # Fetch and attach the features to the car object
     features_list = (
         db.query(models.CarStandardFeatures)
-        .join(
-            models.CarSellStandardFeatures,
-            models.CarStandardFeatures.id
-            == models.CarSellStandardFeatures.car_standard_features_id,
-        )
-        .filter(models.CarSellStandardFeatures.car_for_sale_id == car_detail.id)
+        .join(models.CarRentStandardFeatures,models.CarStandardFeatures.id == models.CarRentStandardFeatures.car_standard_features_id,)
+        .filter(models.CarRentStandardFeatures.car_for_rent_id == car_detail.id)
         .options(load_only(models.CarStandardFeatures.feature_name))
         .all()
     )
