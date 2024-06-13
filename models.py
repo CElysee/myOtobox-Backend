@@ -236,6 +236,7 @@ class BookedRentalCar(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     car_id = Column(Integer, ForeignKey("cars_for_rent.id"))
+    booking_id = Column(String(50))
     start_date = Column(DateTime)
     start_time = Column(String(50))
     end_date = Column(DateTime)

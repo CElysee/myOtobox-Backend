@@ -277,9 +277,9 @@ class BookRentalCarCreate(BaseModel):
     phone_number: str
     car_delivery_choice: str
     start_date: str
-    start_time: str   
+    start_time: Optional[str] = None
     end_date: str
-    end_time: str 
+    end_time: Optional[str] = None 
 
 class BookRentalCarUpdate(BaseModel):
     booking_status: str    
