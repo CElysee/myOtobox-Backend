@@ -29,6 +29,7 @@ class User(Base):
     car_for_sale = relationship("CarForSale", back_populates="user")
     cars_for_rent = relationship("CarsForRent", back_populates="user")
     book_a_test_drive = relationship("BookATestDrive", back_populates="user")
+    booked_rental_car = relationship("BookedRentalCar", back_populates="user")
     import_on_order = relationship("ImportOnOrder", back_populates="user")
     tax_calculator = relationship("TaxCalculator", back_populates="user")
 
@@ -227,7 +228,28 @@ class CarsForRent(Base):
         "CarRentStandardFeatures", back_populates="cars_for_rent"
     )
     car_rent_images = relationship("CarRentImages", back_populates="cars_for_rent")
+    booked_rental_car = relationship("BookedRentalCar", back_populates="cars_for_rent")
 
+class BookedRentalCar(Base):
+    __tablename__ = "booked_rental_car"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    car_id = Column(Integer, ForeignKey("cars_for_rent.id"))
+    start_date = Column(DateTime)
+    start_time = Column(String(50))
+    end_date = Column(DateTime)
+    end_time = Column(String(50))
+    phone_number = Column(String(50))
+    car_delivery_choice = Column(String(50))
+    booking_status = Column(String(50))
+    rental_days = Column(Integer)
+    rental_amount = Column(String(50))
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+    
+    user = relationship("User", back_populates="booked_rental_car")
+    cars_for_rent = relationship("CarsForRent", back_populates="booked_rental_car")
 
 class CarSellStandardFeatures(Base):
     __tablename__ = "car_sell_standard_features"
@@ -394,3 +416,7 @@ class TaxCalculator(Base):
     car_brand = relationship("CarBrand", back_populates="tax_calculator")
     car_model = relationship("CarModel", back_populates="tax_calculator")
     car_trim = relationship("CarTrim", back_populates="tax_calculator")
+    
+    
+
+    

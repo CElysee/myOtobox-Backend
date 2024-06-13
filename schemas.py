@@ -269,3 +269,17 @@ class TaxCalculatorCreate(BaseModel):
     current_value: int
     quitus_fiscal: str
     vehicle_category: str
+    
+    
+class BookRentalCarCreate(BaseModel):
+    user_id: int
+    car_id: str
+    phone_number: str
+    car_delivery_choice: str
+    start_date: str
+    start_time: str   
+    end_date: str
+    end_time: str 
+
+class BookRentalCarUpdate(BaseModel):
+    booking_status: str    
