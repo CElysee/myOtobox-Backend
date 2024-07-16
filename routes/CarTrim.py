@@ -28,6 +28,7 @@ async def get_car_trims(db: db_dependency):
         car_tim.append(
             {
                 "id": trim.id,
+                "trim_code_name": trim.trim_code_name,
                 "trim_name": trim.trim_name,
                 "car_brand_id": trim.car_brand_id,
                 "car_brand_name": db.query(models.CarBrand)
@@ -39,6 +40,7 @@ async def get_car_trims(db: db_dependency):
                 .filter(models.CarModel.id == trim.car_model_id)
                 .first()
                 .brand_model_name,
+                "engine_displacement": trim.engine_displacement,
                 "engine": trim.engine,
                 "curb_weight": trim.curb_weight,
                 "trim_hp": trim.trim_hp,
@@ -119,33 +121,59 @@ async def create_car_trim(car_trim: schemas.CarTrimBase, db: Session = Depends(g
 
 @router.post("/create_excel")
 async def create_car_trim_from_excel(
-    db: Session = Depends(get_db), car_brand_id: str = Form(...), file: UploadFile = File(...), 
+    db: Session = Depends(get_db),
+    # car_brand_id: str = Form(...),
+    file: UploadFile = File(...),
 ):
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Invalid file type")
 
     df = pd.read_csv(file.file)
     for i, row in df.iterrows():
-        name = row["ModelName"]
+        model_name = row["ModelName"]
+        brand_name = row["BrandName"]
+        check_brand_name = (
+            db.query(models.CarBrand)
+            .filter(models.CarBrand.name.ilike(f"%{brand_name}%"))
+            .first()
+        )
+        if not check_brand_name:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Brand {brand_name} not found",
+            )
         chech_model_name = (
             db.query(models.CarModel)
-            .filter(models.CarModel.brand_id == car_brand_id, models.CarModel.brand_model_name.ilike(f"%{name}%"))
+            .filter(
+                models.CarModel.brand_id == check_brand_name.id,
+                models.CarModel.brand_model_name.ilike(f"%{model_name}%"),
+            )
             .first()
         )
         if not chech_model_name:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Model {name} not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Model {model_name} not found",
             )
-        check_trim = db.query(models.CarTrim).filter(models.CarTrim.trim_name == row["TrimName"]).first()    
-        
+        check_trim = (
+            db.query(models.CarTrim)
+            .filter(
+                models.CarTrim.trim_name == row["TrimName"],
+                models.CarTrim.trim_code_name == row["TrimCodeName"],
+            )
+            .first()
+        )
+
         if check_trim:
             continue
         else:
             add_car_trim = models.CarTrim(
-                car_brand_id=car_brand_id,
+                car_brand_id=check_brand_name.id,
                 car_model_id=chech_model_name.id,
                 trim_name=row["TrimName"],
+                trim_code_name=row["TrimCodeName"],
                 engine=row["TrimEngineCC"],
+                engine_displacement=row["TrimDisplacement"],
                 curb_weight=row["TrimWeight"],
                 trim_hp=row["TrimHP"],
                 trim_production_years=row["TrimProductionYear"],

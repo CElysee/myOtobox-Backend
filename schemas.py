@@ -107,9 +107,11 @@ class CarModelUpdate(BaseModel):
 class CarTrimBase(BaseModel):
     car_brand_id: str
     car_model_id: str
+    trim_code_name: str
     trim_name: str
     engine: Optional[str] = None
     trim_hp: Optional[str] = None
+    engine_displacement: str
     curb_weight: Optional[str] = None
     trim_production_years: Optional[str] = None
     created_at: Optional[datetime] = None
