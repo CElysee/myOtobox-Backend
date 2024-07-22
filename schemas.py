@@ -177,7 +177,7 @@ class CarForSaleBase(BaseModel):
     car_control_technique: str
     car_user_type: str
     car_accident_history: str
-    seller_note: str
+    inspection_note: str
     seller_type: str
     seller_phone_number: str
     seller_email: str
@@ -227,9 +227,11 @@ class BookATestDriveCreate(BaseModel):
     booking_status: Optional[str] = None
     date: str
     time: str
-    
+
+
 class BookATestDriveUpdateBookingStatus(BaseModel):
-    booking_status: str   
+    booking_status: str
+
 
 class ImportOnOrderCreate(BaseModel):
     user_id: int
@@ -251,9 +253,11 @@ class ImportOnOrderCreate(BaseModel):
     car_color: str
     order_status: Optional[str] = None
 
+
 class ImportOnOrderUpdateStatus(BaseModel):
     order_status: str
-    
+
+
 class TaxCalculatorCreate(BaseModel):
     user_id: int
     car_brand_id: int
@@ -271,8 +275,8 @@ class TaxCalculatorCreate(BaseModel):
     current_value: int
     quitus_fiscal: str
     vehicle_category: str
-    
-    
+
+
 class BookRentalCarCreate(BaseModel):
     user_id: int
     car_id: str
@@ -281,7 +285,8 @@ class BookRentalCarCreate(BaseModel):
     start_date: str
     start_time: Optional[str] = None
     end_date: str
-    end_time: Optional[str] = None 
+    end_time: Optional[str] = None
+
 
 class BookRentalCarUpdate(BaseModel):
-    booking_status: str    
+    booking_status: str

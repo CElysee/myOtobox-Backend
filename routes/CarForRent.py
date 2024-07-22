@@ -28,7 +28,7 @@ def get_db():
 UPLOAD_FOLDER = "CarRentImages"
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
-    
+
 
 def save_uploaded_file(file: UploadFile):
     file_extension = file.filename.split(".")[-1]
@@ -41,7 +41,7 @@ def save_uploaded_file(file: UploadFile):
 
 def generate_short_stock_number():
     short_stock_number = str(uuid.uuid4())[:8]  # Generate an eight-character UUID
-    return short_stock_number    
+    return short_stock_number
 
 
 @router.get("/list")
@@ -65,7 +65,9 @@ async def get_car_for_rent(
 
     if min_input_price is not None and max_input_price is not None:
         query = query.filter(
-            models.CarsForRent.car_price_per_day.between(min_input_price, max_input_price)
+            models.CarsForRent.car_price_per_day.between(
+                min_input_price, max_input_price
+            )
         )
 
     car_for_sale_list = query.all()
@@ -151,7 +153,9 @@ async def get_car_make_models(
 
     if min_input_price is not None and max_input_price is not None:
         query = query.filter(
-            models.CarsForRent.car_price_per_day.between(min_input_price, max_input_price)
+            models.CarsForRent.car_price_per_day.between(
+                min_input_price, max_input_price
+            )
         )
 
     if start_year is not None and end_year is not None:
@@ -172,7 +176,7 @@ async def get_car_make_models(
 
     if shape:
         query = query.filter(models.CarsForRent.car_body_type == shape)
-        
+
     car_for_rent_list = query.all()
 
     count_cars_for_rent = query.filter(
@@ -208,7 +212,7 @@ async def get_car_make_models(
                 models.CarStandardFeatures.id
                 == models.CarRentStandardFeatures.car_standard_features_id,
             )
-            .filter(models.CarRentStandardFeatures.car_for_sale_id == car.id)
+            .filter(models.CarRentStandardFeatures.car_for_rent_id == car.id)
             .options(load_only(models.CarStandardFeatures.feature_name))
             .all()
         )
@@ -300,12 +304,119 @@ async def get_car_brands(db: db_dependency):
         "car_standard_features": car_standard_features,
     }
 
+
 @router.get("/list/{user_id}")
 async def get_car_for_rent(user_id: int, db: db_dependency):
     car_for_rent_list = (
         db.query(models.CarsForRent).filter(models.CarsForRent.user_id == user_id).all()
     )
     return car_for_rent_list
+
+
+@router.get("/makeModels")
+async def get_car_make_models(
+    make: str = None,
+    model_id: str = None,
+    min_input_price: float = Query(None),
+    max_input_price: float = Query(None),
+    start_year: int = Query(None),
+    end_year: int = Query(None),
+    start_kilometers: int = Query(None),
+    end_kilometers: int = Query(None),
+    car_transmission: str = Query(None),
+    fuel_type: str = Query(None),
+    shape: str = Query(None),
+    db: Session = Depends(get_db),
+):
+
+    query = db.query(models.CarForSale).order_by(models.CarForSale.id.desc())
+
+    if make:
+        make_id = db.query(models.CarBrand).filter(models.CarBrand.name == make).first()
+        if make_id:
+            query = query.filter(models.CarForSale.car_brand_id == make_id.id)
+
+    if model_id:
+        model = (
+            db.query(models.CarModel)
+            .filter(models.CarModel.brand_model_name == model_id)
+            .first()
+        )
+        query = query.filter(models.CarForSale.car_model_id == model.id)
+
+    if min_input_price is not None and max_input_price is not None:
+        query = query.filter(
+            models.CarForSale.car_price.between(min_input_price, max_input_price)
+        )
+
+    if start_year is not None and end_year is not None:
+        startYear = int(start_year)  # Convert to integer if not already
+        endYear = int(end_year)  # Convert to integer if not already
+        query = query.filter(models.CarForSale.car_year.between(startYear, endYear))
+
+    if start_kilometers is not None and end_kilometers is not None:
+        startKilometers = int(start_kilometers)
+        endKilometers = int(end_kilometers)
+        query = query.filter(
+            models.CarForSale.car_mileage.between(startKilometers, endKilometers)
+        )
+    if car_transmission:
+        query = query.filter(models.CarForSale.car_transmission == car_transmission)
+    if fuel_type:
+        query = query.filter(models.CarForSale.car_fuel_type == fuel_type)
+
+    if shape:
+        query = query.filter(models.CarForSale.car_body_type == shape)
+
+    car_for_sale_list = query.all()
+
+    count_cars_for_sale = query.filter(
+        models.CarForSale.car_status == "Available"
+    ).count()
+
+    cars_for_sale = []
+
+    for car in car_for_sale_list:
+        car.brand = (
+            db.query(models.CarBrand)
+            .filter(models.CarBrand.id == car.car_brand_id)
+            .options(load_only(models.CarBrand.name))
+            .first()
+        )
+        car.model = (
+            db.query(models.CarModel)
+            .filter(models.CarModel.id == car.car_model_id)
+            .options(load_only(models.CarModel.brand_model_name))
+            .first()
+        )
+        car.car_images = (
+            db.query(models.CarSellImages)
+            .filter(models.CarSellImages.car_for_sale_id == car.id)
+            .options(load_only(models.CarSellImages.image_name))
+            .all()
+        )
+        # Fetch and attach the features to the car object
+        features_list = (
+            db.query(models.CarStandardFeatures)
+            .join(
+                models.CarSellStandardFeatures,
+                models.CarStandardFeatures.id
+                == models.CarSellStandardFeatures.car_standard_features_id,
+            )
+            .filter(models.CarSellStandardFeatures.car_for_sale_id == car.id)
+            .options(load_only(models.CarStandardFeatures.feature_name))
+            .all()
+        )
+        # car.features = [features.feature_name in features_list for features in features_list]
+        car.features = [feature for feature in features_list]
+        car.features_ids = [feature.id for feature in features_list]
+        # Add car_cover_image field to each car object
+        car_cover_image = "/CarSellImages/" + car.cover_image
+        car.cover_image = car_cover_image
+
+        cars_for_sale.append(car)
+
+    return {"cars_for_sale": cars_for_sale, "count_cars_for_sale": count_cars_for_sale}
 
 
 @router.post("/create")
@@ -336,7 +447,7 @@ async def create_car_for_rent(
     car_registration_number: str = Form(...),
     car_insurance: str = Form(...),
     car_control_technique: str = Form(...),
-    renter_note: str = Form(...),
+    inspection_note: str = Form(...),
     car_condition: str = Form(...),
     car_renter_name: str = Form(...),
     renter_phone_number: str = Form(...),
@@ -353,7 +464,9 @@ async def create_car_for_rent(
     cover_image_path = save_uploaded_file(cover_image)
     short_stock_number = generate_short_stock_number()
     # Last added car for sale
-    last_car = db.query(models.CarsForRent).order_by(models.CarsForRent.id.desc()).first()
+    last_car = (
+        db.query(models.CarsForRent).order_by(models.CarsForRent.id.desc()).first()
+    )
     # Combine the last car ID with the short stock number
     if last_car is None:
         new_stock_number = f"{short_stock_number}1-R"
@@ -389,7 +502,7 @@ async def create_car_for_rent(
         car_insurance=car_insurance,
         car_control_technique=car_control_technique,
         car_status="Available",
-        renter_note=renter_note,
+        inspection_note=inspection_note,
         renter_phone_number=renter_phone_number,
         renter_email=renter_email,
         cover_image=cover_image_path,
@@ -452,7 +565,7 @@ async def update_car_for_rent(
     car_insurance: str = Form(None),
     car_control_technique: str = Form(None),
     car_condition: str = Form(None),
-    renter_note: str = Form(None),
+    inspection_note: str = Form(None),
     renter_phone_number: str = Form(None),
     renter_email: str = Form(None),
     car_renter_name: str = Form(None),
@@ -524,14 +637,14 @@ async def update_car_for_rent(
         check_car_exist.car_insurance = car_insurance
     if car_control_technique:
         check_car_exist.car_control_technique = car_control_technique
-    if renter_note:
-        check_car_exist.renter_note = renter_note
+    if inspection_note:
+        check_car_exist.inspection_note = inspection_note
     if car_renter_name:
         check_car_exist.car_renter_name = car_renter_name
     if renter_phone_number:
         check_car_exist.renter_phone_number = renter_phone_number
     if renter_email:
-        check_car_exist.renter_email = renter_email      
+        check_car_exist.renter_email = renter_email
     if cover_image:
         cover_image_path = save_uploaded_file(cover_image)
         check_car_exist.cover_image = cover_image_path
@@ -603,7 +716,9 @@ async def delete_car_for_rent(id: int, db: db_dependency):
 @router.get("/car_details")
 async def get_car_details(id: str, db: db_dependency):
     car_detail = (
-        db.query(models.CarsForRent).filter(models.CarsForRent.stock_number == id).first()
+        db.query(models.CarsForRent)
+        .filter(models.CarsForRent.stock_number == id)
+        .first()
     )
     if car_detail is None:
         raise HTTPException(
@@ -632,7 +747,11 @@ async def get_car_details(id: str, db: db_dependency):
     # Fetch and attach the features to the car object
     features_list = (
         db.query(models.CarStandardFeatures)
-        .join(models.CarRentStandardFeatures,models.CarStandardFeatures.id == models.CarRentStandardFeatures.car_standard_features_id,)
+        .join(
+            models.CarRentStandardFeatures,
+            models.CarStandardFeatures.id
+            == models.CarRentStandardFeatures.car_standard_features_id,
+        )
         .filter(models.CarRentStandardFeatures.car_for_rent_id == car_detail.id)
         .options(load_only(models.CarStandardFeatures.feature_name))
         .all()
@@ -648,23 +767,36 @@ async def get_car_details(id: str, db: db_dependency):
 
     return car_details
 
+
 @router.get("/search")
 async def search_car_for_rent(keyword: str, db: db_dependency):
-    keywords = db.query(models.CarsForRent).filter(models.CarsForRent.car_name_info.ilike(f"%{keyword}%")).all()
-    brand_keywords = db.query(models.CarBrand).filter(models.CarBrand.name.ilike(f"%{keyword}%")).all()
+    keywords = (
+        db.query(models.CarsForRent)
+        .filter(models.CarsForRent.car_name_info.ilike(f"%{keyword}%"))
+        .all()
+    )
+    brand_keywords = (
+        db.query(models.CarBrand)
+        .filter(models.CarBrand.name.ilike(f"%{keyword}%"))
+        .all()
+    )
     # return brand_keywords
-    
+
     # Return only car_name_info from the list and limit to 10
     return [keyword.car_name_info for keyword in keywords][:10]
 
 
 @router.get("/search/{keyword}")
 async def search_car_for_sale(keyword: str, db: db_dependency):
-    keywords = db.query(models.CarsForRent).filter(models.CarsForRent.car_name_info == keyword).first()
+    keywords = (
+        db.query(models.CarsForRent)
+        .filter(models.CarsForRent.car_name_info == keyword)
+        .first()
+    )
     car_brand = keywords.car_brand
     car_model = keywords.car_model
-    
+
     # Return only car_brand_name and car_model_name from the list
     return {"car_brand": car_brand.name, "car_model": car_model.brand_model_name}
-    
+
     return keywords

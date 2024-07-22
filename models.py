@@ -164,7 +164,7 @@ class CarForSale(Base):
     car_condition = Column(String(50))
     car_seller_name = Column(String(50))
     featured = Column(Boolean)
-    seller_note = Column(Text)
+    inspection_note = Column(Text)
     cover_image = Column(String(50))
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
@@ -217,7 +217,7 @@ class CarsForRent(Base):
     car_condition = Column(String(50))
     car_renter_name = Column(String(50))
     featured = Column(Boolean)
-    renter_note = Column(Text)
+    inspection_note = Column(Text)
     cover_image = Column(String(50))
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
@@ -231,6 +231,7 @@ class CarsForRent(Base):
     )
     car_rent_images = relationship("CarRentImages", back_populates="cars_for_rent")
     booked_rental_car = relationship("BookedRentalCar", back_populates="cars_for_rent")
+
 
 class BookedRentalCar(Base):
     __tablename__ = "booked_rental_car"
@@ -250,9 +251,10 @@ class BookedRentalCar(Base):
     rental_amount = Column(String(50))
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
-    
+
     user = relationship("User", back_populates="booked_rental_car")
     cars_for_rent = relationship("CarsForRent", back_populates="booked_rental_car")
+
 
 class CarSellStandardFeatures(Base):
     __tablename__ = "car_sell_standard_features"
@@ -419,7 +421,3 @@ class TaxCalculator(Base):
     car_brand = relationship("CarBrand", back_populates="tax_calculator")
     car_model = relationship("CarModel", back_populates="tax_calculator")
     car_trim = relationship("CarTrim", back_populates="tax_calculator")
-    
-    
-
-    

@@ -171,7 +171,7 @@ async def get_car_make_models(
 
     if shape:
         query = query.filter(models.CarForSale.car_body_type == shape)
-        
+
     car_for_sale_list = query.all()
 
     count_cars_for_sale = query.filter(
@@ -331,7 +331,7 @@ async def create_car_for_sale(
     car_registration_number: str = Form(...),
     car_insurance: str = Form(...),
     car_control_technique: str = Form(...),
-    seller_note: str = Form(...),
+    inspection_note: str = Form(...),
     car_condition: str = Form(...),
     car_seller_name: str = Form(...),
     seller_phone_number: str = Form(...),
@@ -379,7 +379,7 @@ async def create_car_for_sale(
         car_insurance=car_insurance,
         car_control_technique=car_control_technique,
         car_status="Available",
-        seller_note=seller_note,
+        inspection_note=inspection_note,
         seller_phone_number=seller_phone_number,
         seller_email=seller_email,
         cover_image=cover_image_path,
@@ -437,7 +437,7 @@ async def update_car_for_sale(
     car_insurance: str = Form(None),
     car_control_technique: str = Form(None),
     car_condition: str = Form(None),
-    seller_note: str = Form(None),
+    inspection_note: str = Form(None),
     seller_phone_number: str = Form(None),
     seller_email: str = Form(None),
     car_seller_name: str = Form(None),
@@ -499,8 +499,8 @@ async def update_car_for_sale(
         check_car_exist.car_insurance = car_insurance
     if car_control_technique:
         check_car_exist.car_control_technique = car_control_technique
-    if seller_note:
-        check_car_exist.seller_note = seller_note
+    if inspection_note:
+        check_car_exist.inspection_note = inspection_note
     if car_seller_name:
         check_car_exist.car_seller_name = car_seller_name
     if seller_phone_number:
@@ -628,22 +628,36 @@ async def get_car_details(id: str, db: db_dependency):
 
     return car_details
 
+
 @router.get("/search")
 async def search_car_for_sale(keyword: str, db: db_dependency):
-    keywords = db.query(models.CarForSale).filter(models.CarForSale.car_name_info.ilike(f"%{keyword}%")).all()
-    brand_keywords = db.query(models.CarBrand).filter(models.CarBrand.name.ilike(f"%{keyword}%")).all()
+    keywords = (
+        db.query(models.CarForSale)
+        .filter(models.CarForSale.car_name_info.ilike(f"%{keyword}%"))
+        .all()
+    )
+    brand_keywords = (
+        db.query(models.CarBrand)
+        .filter(models.CarBrand.name.ilike(f"%{keyword}%"))
+        .all()
+    )
     # return brand_keywords
-    
+
     # Return only car_name_info from the list and limit to 10
     return [keyword.car_name_info for keyword in keywords][:10]
 
+
 @router.get("/search/{keyword}")
 async def search_car_for_sale(keyword: str, db: db_dependency):
-    keywords = db.query(models.CarForSale).filter(models.CarForSale.car_name_info == keyword).first()
+    keywords = (
+        db.query(models.CarForSale)
+        .filter(models.CarForSale.car_name_info == keyword)
+        .first()
+    )
     car_brand = keywords.car_brand
     car_model = keywords.car_model
-    
+
     # Return only car_brand_name and car_model_name from the list
     return {"car_brand": car_brand.name, "car_model": car_model.brand_model_name}
-    
+
     # return keywords
