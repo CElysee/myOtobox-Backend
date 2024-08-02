@@ -231,8 +231,6 @@ async def create_tax_calculator(
         "message": "Tax calculator created successfully",
         "data_id": new_tax_calculator.id,
     }
-
-
 @router.get("/get/{id}")
 def get_tax_calculator_by_id(id: int, db: db_dependency):
     tax_calculator = (

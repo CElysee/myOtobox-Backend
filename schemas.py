@@ -290,3 +290,21 @@ class BookRentalCarCreate(BaseModel):
 
 class BookRentalCarUpdate(BaseModel):
     booking_status: str
+
+
+class CarToBeSoldCreate(BaseModel):
+    car_info_name: str
+    manufacture_year: str
+    car_brand_id: int
+    car_model_id: int
+    car_trim_id: int
+    selling_price: str
+    kilometers: str
+    transmission_type: str
+    fuel_type: str
+    exterior_color: str
+    interior_color: str
+    seller_name: str
+    seller_phone_number: str
+    seller_note: str
+    seller_email: str

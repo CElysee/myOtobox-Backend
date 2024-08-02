@@ -264,6 +264,11 @@ async def get_car_brands(db: db_dependency):
                     {
                         "id": trim.id,
                         "trim_name": trim.trim_name,
+                        "engine_displacement": trim.engine,
+                        # "engine": trim.engine,
+                        "curb_weight": trim.curb_weight,
+                        # "trim_hp": trim.trim_hp,
+                        "trim_production_years": trim.trim_production_years,    
                     }
                 )
             car_model.append(

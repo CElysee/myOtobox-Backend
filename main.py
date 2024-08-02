@@ -21,7 +21,8 @@ from routes import (
     DashboardStats,
     CarForRent,
     BookRentalCar,
-    UserDashboard
+    UserDashboard,
+    CarsToBeSold,
 )
 from routes.auth import get_current_user, user_dependency
 
@@ -66,6 +67,7 @@ app.include_router(TaxCalculator.router)
 app.include_router(DashboardStats.router)
 app.include_router(BookRentalCar.router)
 app.include_router(UserDashboard.router)
+app.include_router(CarsToBeSold.router)
 
 
 app.mount("/CarSellImages", StaticFiles(directory="CarSellImages"), name="images")

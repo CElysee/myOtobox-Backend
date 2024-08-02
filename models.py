@@ -62,6 +62,7 @@ class CarBrand(Base):
     cars_for_rent = relationship("CarsForRent", back_populates="car_brand")
     import_on_order = relationship("ImportOnOrder", back_populates="car_brand")
     tax_calculator = relationship("TaxCalculator", back_populates="car_brand")
+    cars_to_be_sold = relationship("CarsToBeSold", back_populates="car_brand")
 
 
 class CarModel(Base):
@@ -81,6 +82,7 @@ class CarModel(Base):
     cars_for_rent = relationship("CarsForRent", back_populates="car_model")
     import_on_order = relationship("ImportOnOrder", back_populates="car_model")
     tax_calculator = relationship("TaxCalculator", back_populates="car_model")
+    cars_to_be_sold = relationship("CarsToBeSold", back_populates="car_model")
 
 
 class CarTrim(Base):
@@ -105,6 +107,7 @@ class CarTrim(Base):
     cars_for_rent = relationship("CarsForRent", back_populates="car_trim")
     import_on_order = relationship("ImportOnOrder", back_populates="car_trim")
     tax_calculator = relationship("TaxCalculator", back_populates="car_trim")
+    cars_to_be_sold = relationship("CarsToBeSold", back_populates="car_trim")
 
 
 class CarStandardFeatures(Base):
@@ -421,3 +424,29 @@ class TaxCalculator(Base):
     car_brand = relationship("CarBrand", back_populates="tax_calculator")
     car_model = relationship("CarModel", back_populates="tax_calculator")
     car_trim = relationship("CarTrim", back_populates="tax_calculator")
+
+class CarsToBeSold(Base):
+    __tablename__ = "cars_to_be_sold"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    car_info_name = Column(String(150))
+    manufacture_year = Column(String(50))
+    car_brand_id = Column(Integer, ForeignKey("car_brands.id"))
+    car_model_id = Column(Integer, ForeignKey("car_models.id"))
+    car_trim_id = Column(Integer, ForeignKey("car_trims.id"))
+    selling_price = Column(String(50))
+    kilometers = Column(String(50))
+    transmission_type = Column(String(50))
+    fuel_type = Column(String(50))
+    exterior_color = Column(String(50))
+    interior_color = Column(String(50))
+    seller_name = Column(String(50))
+    seller_phone_number = Column(String(50))
+    seller_email = Column(String(50), nullable=True)
+    seller_note = Column(Text)
+    listing_car_status = Column(String(50))
+    
+    
+    car_brand = relationship("CarBrand", back_populates="cars_to_be_sold")
+    car_model = relationship("CarModel", back_populates="cars_to_be_sold")
+    car_trim = relationship("CarTrim", back_populates="cars_to_be_sold")
