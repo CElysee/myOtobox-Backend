@@ -275,6 +275,7 @@ class TaxCalculatorCreate(BaseModel):
     current_value: int
     quitus_fiscal: str
     vehicle_category: str
+    price_source: str
 
 
 class BookRentalCarCreate(BaseModel):
@@ -308,3 +309,22 @@ class CarToBeSoldCreate(BaseModel):
     seller_phone_number: str
     seller_note: str
     seller_email: str
+    
+    
+class RRACarMsrpCreate(BaseModel):
+    car_brand: str
+    car_mark: int
+    car_engine: int
+    car_drive: str
+    car_year: str
+    car_new_price: str
+    body_style: Optional[str] = None 
+    
+    
+class FindMsrp(BaseModel):
+    car_brand: Optional[str] = None
+    car_mark: Optional[str] = None
+    car_engine: Optional[str] = None
+    car_drive: Optional[str] = None
+    car_year: Optional[str] = None   
+    body_style: Optional[str] = None   

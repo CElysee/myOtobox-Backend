@@ -113,6 +113,7 @@ async def create_car_to_be_sold(
         seller_phone_number=request_data.seller_phone_number,
         seller_note=request_data.seller_note,
         listing_car_status="Pending",
+        created_at=datetime.now(),
     )
     db.add(new_car)
     db.commit()

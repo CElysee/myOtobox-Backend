@@ -417,6 +417,7 @@ class TaxCalculator(Base):
     plate_fee = Column(String(50))
     aul_tax = Column(String(50))
     total_tax = Column(String(50))
+    price_source= Column(String(50))
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
 
@@ -445,8 +446,30 @@ class CarsToBeSold(Base):
     seller_email = Column(String(50), nullable=True)
     seller_note = Column(Text)
     listing_car_status = Column(String(50))
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+    deleted_at = Column(Boolean)
     
     
     car_brand = relationship("CarBrand", back_populates="cars_to_be_sold")
     car_model = relationship("CarModel", back_populates="cars_to_be_sold")
     car_trim = relationship("CarTrim", back_populates="cars_to_be_sold")
+    
+    
+class RRACarMsrp(Base):
+    __tablename__ = "rra_car_msrp"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    car_brand = Column(String(100))
+    car_mark = Column(String(100))
+    car_engine = Column(String(100))
+    car_drive = Column(String(100))
+    car_year = Column(String(100))
+    car_new_price = Column(String(100))
+    body_style = Column(String(100), nullable=True)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+    deleted_at = Column(Boolean)
+    
+    
+    

@@ -9,9 +9,10 @@ from database import db_dependency, SessionLocal
 from starlette import status
 import models
 import schemas
-from sqlalchemy import asc
+from sqlalchemy import asc, or_, and_, desc
 import hashlib
 import random
+from openai import OpenAI
 
 
 router = APIRouter(tags=["TaxCalculator"], prefix="/tax-calculator")
@@ -215,6 +216,7 @@ async def create_tax_calculator(
         plate_fee=plate_fee,
         aul_tax=aul_tax,
         total_tax=total_tax,
+        price_source=user_request.price_source,
         created_at=datetime.now(),
     )
 
@@ -231,6 +233,8 @@ async def create_tax_calculator(
         "message": "Tax calculator created successfully",
         "data_id": new_tax_calculator.id,
     }
+
+
 @router.get("/get/{id}")
 def get_tax_calculator_by_id(id: int, db: db_dependency):
     tax_calculator = (
@@ -247,3 +251,144 @@ def get_tax_calculator_by_id(id: int, db: db_dependency):
     if tax_calculator is None:
         raise HTTPException(status_code=404, detail="Tax calculator not found")
     return tax_calculator
+
+
+@router.post("/find-msrp")
+async def find_msrp(db: db_dependency, msrp_request: schemas.FindMsrp):
+    # return msrp_request
+    def generate_search_patterns(search_term: str) -> list:
+        if not search_term:
+            return []
+        patterns = [
+            search_term,
+            search_term.replace(" ", "-"),
+            search_term.replace("-", " "),
+        ]
+        return patterns
+
+    car_brand = (
+        db.query(models.CarBrand)
+        .filter(models.CarBrand.id == msrp_request.car_brand)
+        .first()
+    )
+    car_brand_model = (
+        db.query(models.CarModel)
+        .filter(models.CarModel.id == msrp_request.car_mark)
+        .first()
+    )
+    engineDisplacement = msrp_request.car_engine[:3]
+    car_brand_patterns = generate_search_patterns(car_brand.name)
+    car_mark_patterns = generate_search_patterns(car_brand_model.brand_model_name)
+    car_engine_patterns = generate_search_patterns(engineDisplacement)
+    car_drive_patterns = generate_search_patterns(msrp_request.car_drive)
+    car_year_patterns = generate_search_patterns(msrp_request.car_year)
+    body_style_patterns = generate_search_patterns(msrp_request.body_style)
+
+    query = db.query(models.RRACarMsrp)
+
+    if car_brand_patterns:
+        query = query.filter(
+            or_(
+                *[
+                    models.RRACarMsrp.car_brand.like(f"%{pattern}%")
+                    for pattern in car_brand_patterns
+                ]
+            )
+        )
+    if car_mark_patterns:
+        query = query.filter(
+            or_(
+                *[
+                    models.RRACarMsrp.car_mark.like(f"%{pattern}%")
+                    for pattern in car_mark_patterns
+                ]
+            )
+        )
+    if car_engine_patterns:
+        query = query.filter(
+            or_(
+                *[
+                    models.RRACarMsrp.car_engine.like(f"%{pattern}%")
+                    for pattern in car_engine_patterns
+                ]
+            )
+        )
+    if car_drive_patterns:
+        query = query.filter(
+            or_(
+                *[
+                    models.RRACarMsrp.car_drive.like(f"%{pattern}%")
+                    for pattern in car_drive_patterns
+                ]
+            )
+        )
+    if car_year_patterns:
+        query = query.filter(
+            or_(
+                *[
+                    models.RRACarMsrp.car_year.like(f"%{pattern}%")
+                    for pattern in car_year_patterns
+                ]
+            )
+        )
+    if body_style_patterns:
+        query = query.filter(
+            or_(
+                *[
+                    models.RRACarMsrp.body_style.like(f"%{pattern}%")
+                    for pattern in body_style_patterns
+                ]
+            )
+        )
+
+    msrp_records = query.all()
+
+    # Additional filtering to match exact fields
+    filtered_records = [
+        record
+        for record in msrp_records
+        if (
+            not msrp_request.car_drive
+            or msrp_request.car_drive.lower() in record.car_drive.lower()
+        )
+        and (
+            not msrp_request.body_style
+            or msrp_request.body_style.lower() in record.body_style.lower()
+        )
+    ]
+
+    return filtered_records
+
+
+@router.post("/find-msrp-open-ai")
+async def find_msrp_open_ai(db: db_dependency, msrp_request: schemas.FindMsrp):
+    car_brand = (
+        db.query(models.CarBrand)
+        .filter(models.CarBrand.id == msrp_request.car_brand)
+        .first()
+    )
+    car_brand_model = (
+        db.query(models.CarModel)
+        .filter(models.CarModel.id == msrp_request.car_mark)
+        .first()
+    )
+    query = f"Find the MSRP for a {msrp_request.car_year} {car_brand.name} {car_brand_model.brand_model_name} with a {msrp_request.car_engine} engine, {msrp_request.car_drive} drive, and {msrp_request.body_style} body style."
+    client = OpenAI()
+
+
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {
+                "role": "system",
+                "content": "You are a poetic assistant, skilled in explaining complex programming concepts with creative flair.",
+            },
+            {
+                "role": "user",
+                "content": "Compose a poem that explains the concept of recursion in programming.",
+            },
+        ],
+    )
+
+    response = completion.choices[0].message
+    return response
